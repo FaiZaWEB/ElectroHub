@@ -386,16 +386,8 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // Product Data
-        const products = [
-            { id: 1, name: "REDMAGIC 11S Pro", category: "สมาร์ทโฟน", price: 37990, originalPrice: 38990, rating: 4.8, reviews: 124, image: "DTCPI-RM11sPro-Nightfreeze-2_900x.webp", badge: "สินค้าใหม่" },
-            { id: 2, name: "ThinkPad X1 Carbon Gen 14\"", category: "แล็ปท็อป", price: 107433.58, originalPrice: 138595.06, rating: 4.9, reviews: 89, image: "https://p3-ofp.static.pub/ShareResource/optimized/pdp/thinkpad/thinkpad-x1-series/len101t0159/thinkpadx1-gen-14-inch-intel-pdp-gallery-2.png?width=584&height=584", badge: "ลดราคา 22%" },
-            { id: 3, name: "Wireless ANC Earbuds", category: "หูฟัง", price: 5900, originalPrice: 7500, rating: 4.6, reviews: 210, image: "https://placehold.co/400x300/e2e8f0/1e293b?text=ANC+Earbuds", badge: "ลดราคา 20%" },
-            { id: 4, name: "Smartwatch Series 8", category: "สมาร์ทวอทช์", price: 12500, originalPrice: null, rating: 4.7, reviews: 156, image: "https://placehold.co/400x300/e2e8f0/1e293b?text=Smartwatch+S8", badge: null },
-            { id: 5, name: "REDMAGIC Astra 2 Gaming Tablet\"", category: "แท็บเล็ต", price: 28990, originalPrice: 30990, rating: 4.5, reviews: 67, image: "https://th.redmagic.gg/cdn/shop/files/RM_Astra_2__DTC_PI_Black_TH_1_900x.png?v=1790916950", badge: "สินค้าใหม่" },
-            { id: 6, name: "Mirrorless Camera 4K", category: "กล้อง", price: 35000, originalPrice: 38000, rating: 4.9, reviews: 42, image: "https://placehold.co/400x300/e2e8f0/1e293b?text=Mirrorless+Camera", badge: null },
-            { id: 7, name: "Gaming Monitor 27\" 144Hz", category: "จอคอมพิวเตอร์", price: 9900, originalPrice: null, rating: 4.6, reviews: 112, image: "https://placehold.co/400x300/e2e8f0/1e293b?text=Gaming+Monitor", badge: null },
-            { id: 8, name: "Mechanical Keyboard RGB", category: "อุปกรณ์เสริม", price: 3200, originalPrice: 4500, rating: 4.8, reviews: 320, image: "https://placehold.co/400x300/e2e8f0/1e293b?text=Mechanical+Keyboard", badge: "ลดราคา 30%" }
-        ];
+       // เปลี่ยนจาก const เป็น let และกำหนดเป็น array ว่าง
+        let products = [];
 
         // State
         let cart = [];
@@ -878,7 +870,38 @@
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
-            renderProducts();
+            // ฟังก์ชันดึงรายการสินค้าจากตาราง products ใน Supabase
+async function fetchProductsFromSupabase() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('products')
+            .select('*')
+            .order('id', { ascending: true });
+
+        if (error) throw error;
+
+        // แปลงชื่อคอลัมน์จากฐานข้อมูล (original_price) ให้ตรงกับที่โค้ดหน้าเว็บใช้ (originalPrice)
+        products = data.map(item => ({
+            id: item.id,
+            name: item.name,
+            category: item.category,
+            price: item.price,
+            originalPrice: item.original_price,
+            rating: item.rating || 5.0,
+            reviews: item.reviews || 0,
+            image: item.image,
+            badge: item.badge,
+            stock: item.stock || 0
+        }));
+
+        // วาดรายการสินค้าลงบนหน้าเว็บเมื่อได้ข้อมูลมาแล้ว
+        renderProducts();
+
+    } catch (err) {
+        showToast("ไม่สามารถโหลดรายการสินค้าได้: " + err.message, "error");
+    }
+}
+            fetchProductsFromSupabase();
             updateCartUI();
             checkUserSession(); // เรียกตรวจสอบการล็อกอินอัตโนมัติเมื่อเปิดหน้าเว็บ
         });
