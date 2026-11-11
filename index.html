@@ -166,7 +166,6 @@
 
     <!-- Main Content: Products -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full" id="products">
-
         <!-- Product Grid -->
         <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <!-- Products will be injected here via JS -->
@@ -285,7 +284,9 @@
 
             <!-- Modal Body -->
             <div class="p-6">
-                <!-- LOGIN FORM -->
+                <!-- ========================================== -->
+                <!-- 💡 จุดแก้ไขที่ 1: LOGIN FORM (ส่วนเข้าสู่ระบบ) -->
+                <!-- ========================================== -->
                 <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
@@ -312,7 +313,9 @@
                     </button>
                 </form>
 
-                <!-- REGISTER FORM -->
+                <!-- ========================================== -->
+                <!-- 💡 จุดแก้ไขที่ 2: REGISTER FORM (ส่วนสมัครสมาชิก) -->
+                <!-- ========================================== -->
                 <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4 hidden">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล</label>
@@ -346,6 +349,30 @@
                         สมัครสมาชิก
                     </button>
                 </form>
+
+                <!-- ========================================== -->
+                <!-- 💡 จุดแก้ไขที่ 3: OTP VERIFICATION FORM (ส่วนกรอกรหัส OTP ใหม่) -->
+                <!-- ซ่อนไว้ก่อน จะแสดงก็ต่อเมื่อกดสมัครสมาชิกผ่านแล้ว -->
+                <!-- ========================================== -->
+                <form id="form-otp" onsubmit="handleVerifyOTP(event)" class="space-y-4 hidden">
+                    <div class="text-center mb-4">
+                        <i class="fa-solid fa-envelope-circle-check text-4xl text-primary mb-2"></i>
+                        <h3 class="font-bold text-gray-800">ยืนยันอีเมลของคุณ</h3>
+                        <p class="text-xs text-gray-500">ระบบได้ส่งรหัส OTP (Token) ไปที่อีเมลของคุณแล้ว</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">กรอกรหัสยืนยันตัวตนจากอีเมล</label>
+                        <input type="text" id="otp-code" required placeholder="กรอกรหัสจากอีเมล" class="w-full text-center text-xl tracking-widest py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary font-mono">
+                    </div>
+                    <button type="submit" id="otp-submit-btn" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
+                        ยืนยันรหัส OTP
+                    </button>
+                    <!-- ปุ่มสำหรับยกเลิกและกลับไปแก้ไขอีเมล -->
+                    <button type="button" onclick="cancelOTP()" class="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 rounded-xl transition text-sm">
+                        ยกเลิก / สมัครใหม่อีกครั้ง
+                    </button>
+                </form>
+
             </div>
         </div>
     </div>
@@ -360,94 +387,14 @@
 
         // Product Data
         const products = [
-            {
-                id: 1,
-                name: "REDMAGIC 11S Pro",
-                category: "สมาร์ทโฟน",
-                price: 37990,
-                originalPrice: 38990,
-                rating: 4.8,
-                reviews: 124,
-                image: "DTCPI-RM11sPro-Nightfreeze-2_900x.webp",
-                badge: "สินค้าใหม่"
-            },
-            {
-                id: 2,
-                name: "ThinkPad X1 Carbon Gen 14\"",
-                category: "แล็ปท็อป",
-                price: 107433.58,
-                originalPrice: 138595.06,
-                rating: 4.9,
-                reviews: 89,
-                image: "https://p3-ofp.static.pub/ShareResource/optimized/pdp/thinkpad/thinkpad-x1-series/len101t0159/thinkpadx1-gen-14-inch-intel-pdp-gallery-2.png?width=584&height=584",
-                badge: "ลดราคา 22%"
-            },
-            {
-                id: 3,
-                name: "Wireless ANC Earbuds",
-                category: "หูฟัง",
-                price: 5900,
-                originalPrice: 7500,
-                rating: 4.6,
-                reviews: 210,
-                image: "https://placehold.co/400x300/e2e8f0/1e293b?text=ANC+Earbuds",
-                badge: "ลดราคา 20%"
-            },
-            {
-                id: 4,
-                name: "Smartwatch Series 8",
-                category: "สมาร์ทวอทช์",
-                price: 12500,
-                originalPrice: null,
-                rating: 4.7,
-                reviews: 156,
-                image: "https://placehold.co/400x300/e2e8f0/1e293b?text=Smartwatch+S8",
-                badge: null
-            },
-            {
-                id: 5,
-                name: "REDMAGIC Astra 2 Gaming Tablet\"",
-                category: "แท็บเล็ต",
-                price: 28990,
-                originalPrice: 30990,
-                rating: 4.5,
-                reviews: 67,
-                image: "https://th.redmagic.gg/cdn/shop/files/RM_Astra_2__DTC_PI_Black_TH_1_900x.png?v=1790916950",
-                badge: "สินค้าใหม่"
-            },
-            {
-                id: 6,
-                name: "Mirrorless Camera 4K",
-                category: "กล้อง",
-                price: 35000,
-                originalPrice: 38000,
-                rating: 4.9,
-                reviews: 42,
-                image: "https://placehold.co/400x300/e2e8f0/1e293b?text=Mirrorless+Camera",
-                badge: null
-            },
-            {
-                id: 7,
-                name: "Gaming Monitor 27\" 144Hz",
-                category: "จอคอมพิวเตอร์",
-                price: 9900,
-                originalPrice: null,
-                rating: 4.6,
-                reviews: 112,
-                image: "https://placehold.co/400x300/e2e8f0/1e293b?text=Gaming+Monitor",
-                badge: null
-            },
-            {
-                id: 8,
-                name: "Mechanical Keyboard RGB",
-                category: "อุปกรณ์เสริม",
-                price: 3200,
-                originalPrice: 4500,
-                rating: 4.8,
-                reviews: 320,
-                image: "https://placehold.co/400x300/e2e8f0/1e293b?text=Mechanical+Keyboard",
-                badge: "ลดราคา 30%"
-            }
+            { id: 1, name: "REDMAGIC 11S Pro", category: "สมาร์ทโฟน", price: 37990, originalPrice: 38990, rating: 4.8, reviews: 124, image: "DTCPI-RM11sPro-Nightfreeze-2_900x.webp", badge: "สินค้าใหม่" },
+            { id: 2, name: "ThinkPad X1 Carbon Gen 14\"", category: "แล็ปท็อป", price: 107433.58, originalPrice: 138595.06, rating: 4.9, reviews: 89, image: "https://p3-ofp.static.pub/ShareResource/optimized/pdp/thinkpad/thinkpad-x1-series/len101t0159/thinkpadx1-gen-14-inch-intel-pdp-gallery-2.png?width=584&height=584", badge: "ลดราคา 22%" },
+            { id: 3, name: "Wireless ANC Earbuds", category: "หูฟัง", price: 5900, originalPrice: 7500, rating: 4.6, reviews: 210, image: "https://placehold.co/400x300/e2e8f0/1e293b?text=ANC+Earbuds", badge: "ลดราคา 20%" },
+            { id: 4, name: "Smartwatch Series 8", category: "สมาร์ทวอทช์", price: 12500, originalPrice: null, rating: 4.7, reviews: 156, image: "https://placehold.co/400x300/e2e8f0/1e293b?text=Smartwatch+S8", badge: null },
+            { id: 5, name: "REDMAGIC Astra 2 Gaming Tablet\"", category: "แท็บเล็ต", price: 28990, originalPrice: 30990, rating: 4.5, reviews: 67, image: "https://th.redmagic.gg/cdn/shop/files/RM_Astra_2__DTC_PI_Black_TH_1_900x.png?v=1790916950", badge: "สินค้าใหม่" },
+            { id: 6, name: "Mirrorless Camera 4K", category: "กล้อง", price: 35000, originalPrice: 38000, rating: 4.9, reviews: 42, image: "https://placehold.co/400x300/e2e8f0/1e293b?text=Mirrorless+Camera", badge: null },
+            { id: 7, name: "Gaming Monitor 27\" 144Hz", category: "จอคอมพิวเตอร์", price: 9900, originalPrice: null, rating: 4.6, reviews: 112, image: "https://placehold.co/400x300/e2e8f0/1e293b?text=Gaming+Monitor", badge: null },
+            { id: 8, name: "Mechanical Keyboard RGB", category: "อุปกรณ์เสริม", price: 3200, originalPrice: 4500, rating: 4.8, reviews: 320, image: "https://placehold.co/400x300/e2e8f0/1e293b?text=Mechanical+Keyboard", badge: "ลดราคา 30%" }
         ];
 
         // State
@@ -455,6 +402,11 @@
         let isCartOpen = false;
         let currentUser = null;
         let activeCategory = 'all';
+
+        // ==========================================
+        // 💡 จุดแก้ไขที่ 4: ตัวแปรเก็บอีเมลสำหรับการยืนยัน OTP
+        // ==========================================
+        let pendingEmailForOTP = '';
 
         // Format Currency
         const formatPrice = (price) => {
@@ -474,8 +426,6 @@
 
         function filterCategory(category) {
             activeCategory = category;
-            
-            // Update button styles
             const buttons = document.querySelectorAll('.category-btn');
             buttons.forEach(btn => {
                 if (btn.innerText.includes(category) || (category === 'all' && btn.innerText === 'ทั้งหมด')) {
@@ -484,7 +434,6 @@
                     btn.className = 'category-btn bg-white hover:bg-gray-100 text-gray-700 font-medium px-5 py-2 rounded-full text-sm whitespace-nowrap border border-gray-200 transition';
                 }
             });
-
             filterProducts();
         }
 
@@ -492,32 +441,20 @@
         function renderProducts(productList = products) {
             const grid = document.getElementById('product-grid');
             grid.innerHTML = '';
-
             if (productList.length === 0) {
                 grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-12"><i class="fa-solid fa-box-open text-4xl mb-3 opacity-30"></i><p>ไม่พบสินค้าที่ค้นหา</p></div>`;
                 return;
             }
-
             productList.forEach(product => {
-                // Generate Stars HTML
                 let starsHtml = '';
                 for(let i=1; i<=5; i++) {
-                    if(i <= Math.floor(product.rating)) {
-                        starsHtml += `<i class="fa-solid fa-star text-yellow-400 text-xs"></i>`;
-                    } else if(i === Math.ceil(product.rating) && !Number.isInteger(product.rating)) {
-                        starsHtml += `<i class="fa-solid fa-star-half-stroke text-yellow-400 text-xs"></i>`;
-                    } else {
-                        starsHtml += `<i class="fa-regular fa-star text-gray-300 text-xs"></i>`;
-                    }
+                    if(i <= Math.floor(product.rating)) starsHtml += `<i class="fa-solid fa-star text-yellow-400 text-xs"></i>`;
+                    else if(i === Math.ceil(product.rating) && !Number.isInteger(product.rating)) starsHtml += `<i class="fa-solid fa-star-half-stroke text-yellow-400 text-xs"></i>`;
+                    else starsHtml += `<i class="fa-regular fa-star text-gray-300 text-xs"></i>`;
                 }
-
-                // Pricing HTML
                 let priceHtml = `<span class="text-xl font-bold text-gray-900">${formatPrice(product.price)}</span>`;
-                if(product.originalPrice) {
-                    priceHtml += `<span class="text-sm text-gray-400 line-through ml-2">${formatPrice(product.originalPrice)}</span>`;
-                }
-
-                // Badge HTML
+                if(product.originalPrice) priceHtml += `<span class="text-sm text-gray-400 line-through ml-2">${formatPrice(product.originalPrice)}</span>`;
+                
                 let badgeHtml = '';
                 if(product.badge) {
                     const badgeBg = product.badge.includes('ลดราคา') ? 'bg-red-500' : 'bg-primary';
@@ -529,31 +466,18 @@
                         <div class="relative overflow-hidden aspect-[4/3] bg-gray-100">
                             ${badgeHtml}
                             <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500">
-                            
-                            <!-- Quick action buttons -->
                             <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                <button onclick="addToCart(${product.id})" class="bg-white text-gray-900 hover:bg-primary hover:text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300">
-                                    <i class="fa-solid fa-cart-plus"></i>
-                                </button>
-                                <button class="bg-white text-gray-900 hover:text-red-500 rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300 delay-75">
-                                    <i class="fa-regular fa-heart"></i>
-                                </button>
+                                <button onclick="addToCart(${product.id})" class="bg-white text-gray-900 hover:bg-primary hover:text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300"><i class="fa-solid fa-cart-plus"></i></button>
+                                <button class="bg-white text-gray-900 hover:text-red-500 rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300 delay-75"><i class="fa-regular fa-heart"></i></button>
                             </div>
                         </div>
                         <div class="p-5 flex flex-col flex-grow">
                             <span class="text-xs text-primary font-medium mb-1">${product.category}</span>
                             <h3 class="text-lg font-semibold text-gray-900 mb-1 leading-tight">${product.name}</h3>
-                            <div class="flex items-center mb-3">
-                                ${starsHtml}
-                                <span class="text-xs text-gray-500 ml-2">(${product.reviews})</span>
-                            </div>
+                            <div class="flex items-center mb-3">${starsHtml}<span class="text-xs text-gray-500 ml-2">(${product.reviews})</span></div>
                             <div class="mt-auto flex items-center justify-between">
-                                <div class="flex items-baseline">
-                                    ${priceHtml}
-                                </div>
-                                <button onclick="addToCart(${product.id})" class="md:hidden lg:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-primary hover:text-white text-gray-600 flex items-center justify-center transition-colors">
-                                    <i class="fa-solid fa-plus"></i>
-                                </button>
+                                <div class="flex items-baseline">${priceHtml}</div>
+                                <button onclick="addToCart(${product.id})" class="md:hidden lg:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-primary hover:text-white text-gray-600 flex items-center justify-center transition-colors"><i class="fa-solid fa-plus"></i></button>
                             </div>
                         </div>
                     </div>
@@ -570,13 +494,20 @@
 
         function closeAuthModal() {
             document.getElementById('auth-modal').classList.add('hidden');
+            // รีเซ็ตฟอร์มเวลาปิด
+            resetAuthForms();
         }
 
         function switchAuthTab(tab) {
             const loginForm = document.getElementById('form-login');
             const regForm = document.getElementById('form-register');
+            const otpForm = document.getElementById('form-otp'); // 💡 ฟอร์ม OTP
+            
             const tabLogin = document.getElementById('tab-login');
             const tabReg = document.getElementById('tab-register');
+
+            // 💡 ซ่อนฟอร์ม OTP เสมอถ้าผู้ใช้กดสลับแท็บไปมา
+            if (otpForm) otpForm.classList.add('hidden');
 
             if (tab === 'login') {
                 loginForm.classList.remove('hidden');
@@ -591,9 +522,27 @@
             }
         }
 
+        // ==========================================
+        // 💡 จุดแก้ไขที่ 5: ฟังก์ชันช่วยรีเซ็ตฟอร์ม (ล้างข้อมูลตอนกดยกเลิกหรือปิด Modal)
+        // ==========================================
+        function resetAuthForms() {
+            document.getElementById('form-register').reset();
+            document.getElementById('form-login').reset();
+            document.getElementById('form-otp').reset();
+            document.getElementById('form-otp').classList.add('hidden');
+            pendingEmailForOTP = '';
+        }
+
+        function cancelOTP() {
+            resetAuthForms();
+            switchAuthTab('register');
+        }
+
         // ==================== SUPABASE AUTHENTICATION SYSTEM ==================== //
 
-        // 1. ฟังก์ชันสมัครสมาชิก (Register)
+        // ==========================================
+        // 💡 จุดแก้ไขที่ 6: ปรับฟังก์ชันสมัครสมาชิกให้โชว์หน้า OTP แทนการแจ้งให้ไปกดลิงก์
+        // ==========================================
         async function handleRegister(event) {
             event.preventDefault();
             const btn = document.getElementById('reg-submit-btn');
@@ -608,7 +557,7 @@
             }
 
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังสมัครสมาชิก...';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังส่งรหัส...';
 
             try {
                 const { data, error } = await supabaseClient.auth.signUp({
@@ -621,14 +570,62 @@
 
                 if (error) throw error;
 
-                showToast("สมัครสมาชิกสำเร็จ! กรุณาเช็กอีเมลเพื่อยืนยันตัวตน", "success");
-                closeAuthModal();
-                document.getElementById('form-register').reset();
+                // 💡 เก็บอีเมลไว้เพื่อใช้ตรวจสอบในขั้นตอน OTP
+                pendingEmailForOTP = email;
+
+                showToast("ส่งรหัสยืนยันตัวตนไปยังอีเมลของคุณแล้ว!", "success");
+                
+                // 💡 สลับหน้าจอ: ซ่อนฟอร์มสมัคร -> เปิดฟอร์ม OTP
+                document.getElementById('form-register').classList.add('hidden');
+                document.getElementById('form-otp').classList.remove('hidden');
+
             } catch (err) {
                 showToast("สมัครสมาชิกไม่สำเร็จ: " + err.message, "error");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = 'สมัครสมาชิก';
+            }
+        }
+
+        // ==========================================
+        // 💡 จุดแก้ไขที่ 7: เพิ่มฟังก์ชันตรวจสอบ OTP (ใหม่ล่าสุด!)
+        // ==========================================
+        async function handleVerifyOTP(event) {
+            event.preventDefault();
+            const btn = document.getElementById('otp-submit-btn');
+            const token = document.getElementById('otp-code').value.trim();
+
+            if (!token) {
+                showToast("กรุณากรอกรหัสจากอีเมล", "error");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังตรวจสอบรหัส...';
+
+            try {
+                // 💡 ยืนยันรหัส OTP (Token) กับ Supabase
+                const { data, error } = await supabaseClient.auth.verifyOtp({
+                    email: pendingEmailForOTP,
+                    token: token,
+                    type: 'signup' // ประเภทคือการสมัครใหม่
+                });
+
+                if (error) throw error;
+
+                showToast("ยืนยันอีเมลสำเร็จ! เข้าสู่ระบบเรียบร้อยแล้ว", "success");
+                
+                // ดึงข้อมูลผู้ใช้มาแสดงบนเว็บ
+                checkUserSession();
+                
+                // ปิด Modal และรีเซ็ตฟอร์ม
+                closeAuthModal();
+
+            } catch (err) {
+                showToast("รหัสไม่ถูกต้องหรือหมดอายุ: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'ยืนยันรหัส OTP';
             }
         }
 
@@ -658,10 +655,10 @@
                 };
                 updateAuthUI();
                 closeAuthModal();
-                document.getElementById('form-login').reset();
+                resetAuthForms();
                 showToast(`ยินดีต้อนรับกลับ, คุณ${currentUser.name}!`, "success");
             } catch (err) {
-                showToast("อีเมลหรือรหัสผ่านไม่ถูกต้อง: " + err.message, "error");
+                showToast("อีเมลหรือรหัสผ่านไม่ถูกต้อง", "error"); // ซ่อน error.message ไว้เพื่อความปลอดภัย
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = 'เข้าสู่ระบบ';
