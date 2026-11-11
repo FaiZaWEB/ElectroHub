@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script>
         tailwind.config = {
@@ -305,7 +307,7 @@
                         </label>
                         <a href="#" class="text-primary hover:underline">ลืมรหัสผ่าน?</a>
                     </div>
-                    <button type="submit" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
+                    <button type="submit" id="login-submit-btn" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
                         เข้าสู่ระบบ
                     </button>
                 </form>
@@ -340,7 +342,7 @@
                             <input type="password" id="reg-confirm-password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
+                    <button type="submit" id="reg-submit-btn" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
                         สมัครสมาชิก
                     </button>
                 </form>
@@ -350,6 +352,12 @@
 
     <!-- JavaScript Logic -->
     <script>
+        // 1. ตั้งค่าและเชื่อมต่อ Supabase Client
+        const SUPABASE_URL = 'https://zlpxxwauxgwsvvukfqmx.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'sb_publishable_mTmE2KIwTN0vsM7nDlePTg_rHJwCaNn';                 
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         // Product Data
         const products = [
             {
@@ -583,20 +591,14 @@
             }
         }
 
-        function handleLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const name = email.split('@')[0]; // Extract name from email for demo
+        // ==================== SUPABASE AUTHENTICATION SYSTEM ==================== //
 
-            currentUser = { name: name, email: email };
-            updateAuthUI();
-            closeAuthModal();
-            showToast(`ยินดีต้อนรับกลับ, คุณ${name}!`, "success");
-        }
-
-        function handleRegister(event) {
+        // 1. ฟังก์ชันสมัครสมาชิก (Register)
+        async function handleRegister(event) {
             event.preventDefault();
+            const btn = document.getElementById('reg-submit-btn');
             const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
             const password = document.getElementById('reg-password').value;
             const confirmPassword = document.getElementById('reg-confirm-password').value;
 
@@ -605,18 +607,99 @@
                 return;
             }
 
-            currentUser = { name: name, email: document.getElementById('reg-email').value };
-            updateAuthUI();
-            closeAuthModal();
-            showToast(`สมัครสมาชิกสำเร็จ! ยินดีต้อนรับคุณ${name}`, "success");
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังสมัครสมาชิก...';
+
+            try {
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: { display_name: name }
+                    }
+                });
+
+                if (error) throw error;
+
+                showToast("สมัครสมาชิกสำเร็จ! กรุณาเช็กอีเมลเพื่อยืนยันตัวตน", "success");
+                closeAuthModal();
+                document.getElementById('form-register').reset();
+            } catch (err) {
+                showToast("สมัครสมาชิกไม่สำเร็จ: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'สมัครสมาชิก';
+            }
         }
 
-        function logout() {
-            currentUser = null;
-            updateAuthUI();
-            toggleUserDropdown();
-            showToast("ออกจากระบบเรียบร้อยแล้ว");
+        // 2. ฟังก์ชันเข้าสู่ระบบ (Login)
+        async function handleLogin(event) {
+            event.preventDefault();
+            const btn = document.getElementById('login-submit-btn');
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังเข้าสู่ระบบ...';
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                const user = data.user;
+                currentUser = {
+                    id: user.id,
+                    email: user.email,
+                    name: user.user_metadata?.display_name || email.split('@')[0]
+                };
+                updateAuthUI();
+                closeAuthModal();
+                document.getElementById('form-login').reset();
+                showToast(`ยินดีต้อนรับกลับ, คุณ${currentUser.name}!`, "success");
+            } catch (err) {
+                showToast("อีเมลหรือรหัสผ่านไม่ถูกต้อง: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'เข้าสู่ระบบ';
+            }
         }
+
+        // 3. ฟังก์ชันออกจากระบบ (Logout)
+        async function logout() {
+            try {
+                await supabaseClient.auth.signOut();
+                currentUser = null;
+                updateAuthUI();
+                toggleUserDropdown();
+                showToast("ออกจากระบบเรียบร้อยแล้ว");
+            } catch (err) {
+                showToast("เกิดข้อผิดพลาดในการออกจากระบบ", "error");
+            }
+        }
+
+        // 4. ฟังก์ชันเช็กสถานะล็อกอินค้างไว้ (Check Session)
+        async function checkUserSession() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    const user = session.user;
+                    currentUser = {
+                        id: user.id,
+                        email: user.email,
+                        name: user.user_metadata?.display_name || user.email.split('@')[0]
+                    };
+                    updateAuthUI();
+                }
+            } catch (err) {
+                console.error("Session check error:", err);
+            }
+        }
+
+        // ========================================================================= //
 
         function updateAuthUI() {
             const loginBtn = document.getElementById('login-btn');
@@ -650,7 +733,6 @@
 
             if (isCartOpen) {
                 sidebar.classList.remove('invisible');
-                // slight delay to allow display block to apply before transition
                 setTimeout(() => {
                     backdrop.classList.remove('opacity-0');
                     panel.classList.remove('translate-x-full');
@@ -658,7 +740,6 @@
             } else {
                 backdrop.classList.add('opacity-0');
                 panel.classList.add('translate-x-full');
-                // wait for transition to finish
                 setTimeout(() => {
                     sidebar.classList.add('invisible');
                 }, 300);
@@ -703,14 +784,11 @@
             const cartCount = document.getElementById('cart-count');
             const cartTotal = document.getElementById('cart-total');
 
-            // Update Badge
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
             cartCount.innerText = totalItems;
             
-            // Toggle Empty State
             if (cart.length === 0) {
                 emptyMsg.style.display = 'flex';
-                // Remove all other items from DOM
                 const items = container.querySelectorAll('.cart-item');
                 items.forEach(item => item.remove());
                 cartTotal.innerText = '฿0';
@@ -719,8 +797,6 @@
                 emptyMsg.style.display = 'none';
             }
 
-            // Render Items
-            // Remove existing items to rebuild (simple approach for this scale)
             const existingItems = container.querySelectorAll('.cart-item');
             existingItems.forEach(item => item.remove());
 
@@ -759,7 +835,6 @@
                 return;
             }
             
-            // Simulate checkout
             const btn = document.querySelector('#cart-panel button.w-full');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังดำเนินการ...';
@@ -767,11 +842,10 @@
             btn.classList.add('opacity-75');
 
             setTimeout(() => {
-                cart = []; // Empty cart
+                cart = []; 
                 updateCartUI();
-                toggleCart(); // Close cart
+                toggleCart(); 
                 
-                // Reset button
                 btn.innerHTML = originalText;
                 btn.disabled = false;
                 btn.classList.remove('opacity-75');
@@ -780,7 +854,7 @@
             }, 1500);
         }
 
-        // Custom Toast Notification System (replaces alert)
+        // Custom Toast Notification System
         function showToast(message, type = "success") {
             const container = document.getElementById('toast-container');
             
@@ -797,10 +871,8 @@
             
             container.appendChild(toast);
 
-            // Remove toast after 3 seconds
             setTimeout(() => {
                 toast.classList.replace('toast-enter', 'toast-exit');
-                // Wait for animation to finish before removing from DOM
                 setTimeout(() => {
                     toast.remove();
                 }, 300);
@@ -811,8 +883,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             renderProducts();
             updateCartUI();
+            checkUserSession(); // เรียกตรวจสอบการล็อกอินอัตโนมัติเมื่อเปิดหน้าเว็บ
         });
-
     </script>
 </body>
 </html>
