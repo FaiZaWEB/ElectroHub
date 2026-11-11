@@ -418,6 +418,30 @@
 
         function filterCategory(category) {
             activeCategory = category;
+            // ฟังก์ชันดึงชื่อหมวดหมู่จากสินค้าใน Supabase มาสร้างเป็นปุ่มให้อัตโนมัติ
+        function renderCategoryButtons() {
+    // 1. ดึงชื่อหมวดหมู่ทั้งหมดที่มีอยู่ใน products แบบไม่ซ้ำกัน
+         const categories = ['all', ...new Set(products.map(p => p.category).filter(Boolean))];
+    
+    // 2. ค้นหาแถบปุ่มหมวดหมู่บนหน้าเว็บ
+        const container = document.querySelector('section div.flex.space-x-2');
+            if (!container) return;
+    
+            container.innerHTML = ''; // ล้างปุ่มเดิมออกก่อน
+
+    // 3. วาดปุ่มหมวดหมู่ใหม่ตามที่มีข้อมูลจริงใน Supabase
+        categories.forEach(cat => {
+         const btn = document.createElement('button');
+            const isAll = cat === 'all';
+            const label = isAll ? 'ทั้งหมด' : cat;
+        
+                btn.onclick = () => filterCategory(cat);
+                  btn.className = `category-btn ${cat === activeCategory ? 'bg-primary text-white font-medium shadow-sm' : 'bg-white hover:bg-gray-100 text-gray-700 font-medium border border-gray-200'} px-5 py-2 rounded-full text-sm whitespace-nowrap transition`;
+                     btn.innerText = label;
+        
+        container.appendChild(btn);
+    });
+}
             const buttons = document.querySelectorAll('.category-btn');
             buttons.forEach(btn => {
                 if (btn.innerText.includes(category) || (category === 'all' && btn.innerText === 'ทั้งหมด')) {
@@ -871,7 +895,27 @@
         // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
             // ฟังก์ชันดึงรายการสินค้าจากตาราง products ใน Supabase
-async function fetchProductsFromSupabase() {
+// ฟังก์ชันสร้างปุ่มหมวดหมู่อัตโนมัติจากสินค้าใน Supabase
+function renderCategoryButtons() {
+    const categories = ['all', ...new Set(products.map(p => p.category).filter(Boolean))];
+    const container = document.querySelector('section div.flex.space-x-2');
+    if (!container) return;
+    
+    container.innerHTML = ''; // ล้างปุ่มเดิมออกก่อน
+
+    categories.forEach(cat => {
+        const btn = document.createElement('button');
+        const isAll = cat === 'all';
+        const label = isAll ? 'ทั้งหมด' : cat;
+        
+        btn.onclick = () => filterCategory(cat);
+        btn.className = `category-btn ${cat === activeCategory ? 'bg-primary text-white font-medium shadow-sm' : 'bg-white hover:bg-gray-100 text-gray-700 font-medium border border-gray-200'} px-5 py-2 rounded-full text-sm whitespace-nowrap transition`;
+        btn.innerText = label;
+        
+        container.appendChild(btn);
+    });
+}
+            async function fetchProductsFromSupabase() {
     try {
         const { data, error } = await supabaseClient
             .from('products')
@@ -896,6 +940,7 @@ async function fetchProductsFromSupabase() {
 
         // วาดรายการสินค้าลงบนหน้าเว็บเมื่อได้ข้อมูลมาแล้ว
         renderProducts();
+        renderCategoryButtons();
 
     } catch (err) {
         showToast("ไม่สามารถโหลดรายการสินค้าได้: " + err.message, "error");
