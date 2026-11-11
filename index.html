@@ -111,7 +111,8 @@
                             <!-- Dropdown Menu -->
                             <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 hidden border border-gray-100">
                                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"><i class="fa-regular fa-id-card mr-2 text-gray-400"></i> โปรไฟล์ของฉัน</a>
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"><i class="fa-solid fa-box mr-2 text-gray-400"></i> ประวัติการสั่งซื้อ</a>
+                                <!-- 💡 แก้ไขจุดที่ 2: เชื่อมปุ่มเปิด Modal ประวัติการสั่งซื้อ -->
+                                <a href="#" onclick="openOrdersModal()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"><i class="fa-solid fa-box mr-2 text-gray-400"></i> ประวัติการสั่งซื้อ</a>
                                 <hr class="my-1 border-gray-100">
                                 <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"><i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> ออกจากระบบ</button>
                             </div>
@@ -136,58 +137,36 @@
     </nav>
 
     <!-- Hero Section -->
-    
-<!-- Hero Section -->
-<div class="bg-secondary text-white relative overflow-hidden min-h-[600px] flex items-center">
+    <div class="bg-secondary text-white relative overflow-hidden min-h-[600px] flex items-center">
+        <!-- Background Image -->
+        <div class="absolute inset-0 z-0">
+            <img src="./images/electronics_banner_1920x600.png" alt="ElectroHub Background" class="w-full h-full object-cover object-center">
+            <!-- Dark Gradient Overlay -->
+            <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/35 to-transparent"></div>
+        </div>
 
-    <!-- Background Image -->
-    <div class="absolute inset-0 z-0">
-        <img
-            src="./images/electronics_banner_1920x600.png"
-            alt="ElectroHub Background"
-            class="w-full h-full object-cover object-center"
-        >
-
-        <!-- Dark Gradient Overlay -->
-        <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/35 to-transparent"></div>
-    </div>
-
-    <!-- Hero Content -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full">
-
-        <div class="md:w-1/2">
-
-            <h1 class="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-                นวัตกรรมแห่งอนาคต
-                <br>
-                <span class="text-primary">อยู่ในมือคุณแล้ววันนี้</span>
-            </h1>
-
-            <p class="text-lg text-gray-300 mb-8 max-w-xl">
-                พบกับสมาร์ทโฟน แล็ปท็อป และอุปกรณ์แกดเจ็ตระดับพรีเมียมในราคาพิเศษ
-                พร้อมบริการจัดส่งฟรีทั่วประเทศ
-            </p>
-
-            <a href="#products"
-               class="inline-block bg-primary hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-full shadow-lg transition transform hover:-translate-y-1">
-                ช้อปเลยตอนนี้
-            </a>
-
+        <!-- Hero Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full">
+            <div class="md:w-1/2">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 leading-tight">
+                    นวัตกรรมแห่งอนาคต <br>
+                    <span class="text-primary">อยู่ในมือคุณแล้ววันนี้</span>
+                </h1>
+                <p class="text-lg text-gray-300 mb-8 max-w-xl">
+                    พบกับสมาร์ทโฟน แล็ปท็อป และอุปกรณ์แกดเจ็ตระดับพรีเมียมในราคาพิเศษ พร้อมบริการจัดส่งฟรีทั่วประเทศ
+                </p>
+                <a href="#products" class="inline-block bg-primary hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-full shadow-lg transition transform hover:-translate-y-1">
+                    ช้อปเลยตอนนี้
+                </a>
+            </div>
         </div>
     </div>
-</div>
-
 
     <!-- Category Filters -->
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
         <h3 class="text-lg font-bold text-gray-800 mb-4">หมวดหมู่สินค้า</h3>
         <div class="flex space-x-2 overflow-x-auto pb-2 scrollbar-none">
-            <button onclick="filterCategory('all')" class="category-btn bg-primary text-white font-medium px-5 py-2 rounded-full text-sm whitespace-nowrap shadow-sm transition">ทั้งหมด</button>
-            <button onclick="filterCategory('สมาร์ทโฟน')" class="category-btn bg-white hover:bg-gray-100 text-gray-700 font-medium px-5 py-2 rounded-full text-sm whitespace-nowrap border border-gray-200 transition">สมาร์ทโฟน</button>
-            <button onclick="filterCategory('แล็ปท็อป')" class="category-btn bg-white hover:bg-gray-100 text-gray-700 font-medium px-5 py-2 rounded-full text-sm whitespace-nowrap border border-gray-200 transition">แล็ปท็อป</button>
-            <button onclick="filterCategory('หูฟัง')" class="category-btn bg-white hover:bg-gray-100 text-gray-700 font-medium px-5 py-2 rounded-full text-sm whitespace-nowrap border border-gray-200 transition">หูฟัง</button>
-            <button onclick="filterCategory('สมาร์ทวอทช์')" class="category-btn bg-white hover:bg-gray-100 text-gray-700 font-medium px-5 py-2 rounded-full text-sm whitespace-nowrap border border-gray-200 transition">สมาร์ทวอทช์</button>
-            <button onclick="filterCategory('แท็บเล็ต')" class="category-btn bg-white hover:bg-gray-100 text-gray-700 font-medium px-5 py-2 rounded-full text-sm whitespace-nowrap border border-gray-200 transition">แท็บเล็ต</button>
+            <!-- ปุ่มหมวดหมู่จะถูกสร้างอัตโนมัติจาก Supabase -->
         </div>
     </section>
 
@@ -244,15 +223,10 @@
         </div>
     </footer>
 
-    <!-- Shopping Cart Sidebar (Hidden by default) -->
+    <!-- Shopping Cart Sidebar -->
     <div id="cart-sidebar" class="fixed inset-0 z-50 invisible">
-        <!-- Backdrop -->
         <div id="cart-backdrop" class="absolute inset-0 bg-black bg-opacity-50 opacity-0 transition-opacity duration-300" onclick="toggleCart()"></div>
-        
-        <!-- Sidebar Content -->
         <div id="cart-panel" class="absolute inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
-            
-            <!-- Cart Header -->
             <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
                 <h2 class="text-lg font-bold text-gray-900"><i class="fa-solid fa-cart-shopping mr-2 text-primary"></i> ตะกร้าสินค้าของคุณ</h2>
                 <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-600 focus:outline-none p-2">
@@ -260,9 +234,7 @@
                 </button>
             </div>
 
-            <!-- Cart Items -->
             <div id="cart-items-container" class="flex-1 overflow-y-auto p-6 space-y-4 cart-scroll">
-                <!-- Cart items will be injected here -->
                 <div id="empty-cart-msg" class="text-center text-gray-500 py-10 flex flex-col items-center">
                     <i class="fa-solid fa-basket-shopping text-4xl mb-3 opacity-20"></i>
                     <p>ตะกร้าสินค้าว่างเปล่า</p>
@@ -270,7 +242,6 @@
                 </div>
             </div>
 
-            <!-- Cart Footer -->
             <div class="border-t p-6 bg-gray-50">
                 <div class="flex justify-between text-base font-medium text-gray-900 mb-4">
                     <p>ยอดรวมทั้งสิ้น</p>
@@ -284,22 +255,17 @@
         </div>
     </div>
 
-    <!-- Toast Container for Notifications -->
+    <!-- Toast Container -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
     <!-- Login / Register Modal -->
     <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
-        <!-- Modal Backdrop -->
         <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closeAuthModal()"></div>
-
-        <!-- Modal Content Box -->
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden z-10 transform transition-all">
-            <!-- Close Button -->
             <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2 z-20">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
 
-            <!-- Modal Header Tabs -->
             <div class="flex border-b">
                 <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-4 font-bold text-center border-b-2 border-primary text-primary transition">
                     เข้าสู่ระบบ
@@ -309,11 +275,8 @@
                 </button>
             </div>
 
-            <!-- Modal Body -->
             <div class="p-6">
-                <!-- ========================================== -->
-                <!-- 💡 จุดแก้ไขที่ 1: LOGIN FORM (ส่วนเข้าสู่ระบบ) -->
-                <!-- ========================================== -->
+                <!-- LOGIN FORM -->
                 <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
@@ -340,9 +303,7 @@
                     </button>
                 </form>
 
-                <!-- ========================================== -->
-                <!-- 💡 จุดแก้ไขที่ 2: REGISTER FORM (ส่วนสมัครสมาชิก) -->
-                <!-- ========================================== -->
+                <!-- REGISTER FORM -->
                 <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4 hidden">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล</label>
@@ -377,10 +338,7 @@
                     </button>
                 </form>
 
-                <!-- ========================================== -->
-                <!-- 💡 จุดแก้ไขที่ 3: OTP VERIFICATION FORM (ส่วนกรอกรหัส OTP ใหม่) -->
-                <!-- ซ่อนไว้ก่อน จะแสดงก็ต่อเมื่อกดสมัครสมาชิกผ่านแล้ว -->
-                <!-- ========================================== -->
+                <!-- OTP VERIFICATION FORM -->
                 <form id="form-otp" onsubmit="handleVerifyOTP(event)" class="space-y-4 hidden">
                     <div class="text-center mb-4">
                         <i class="fa-solid fa-envelope-circle-check text-4xl text-primary mb-2"></i>
@@ -394,12 +352,32 @@
                     <button type="submit" id="otp-submit-btn" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
                         ยืนยันรหัส OTP
                     </button>
-                    <!-- ปุ่มสำหรับยกเลิกและกลับไปแก้ไขอีเมล -->
                     <button type="button" onclick="cancelOTP()" class="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 rounded-xl transition text-sm">
                         ยกเลิก / สมัครใหม่อีกครั้ง
                     </button>
                 </form>
+            </div>
+        </div>
+    </div>
 
+    <!-- Order History Modal -->
+    <div id="orders-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closeOrdersModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col z-10 overflow-hidden">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                    <i class="fa-solid fa-box-archive mr-2 text-primary"></i> ประวัติการสั่งซื้อของฉัน
+                </h3>
+                <button onclick="closeOrdersModal()" class="text-gray-400 hover:text-gray-600 p-2">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div id="orders-list-container" class="p-6 overflow-y-auto space-y-4 flex-1 cart-scroll">
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-primary mb-2"></i>
+                    <p>กำลังโหลดประวัติการสั่งซื้อ...</p>
+                </div>
             </div>
         </div>
     </div>
@@ -409,22 +387,14 @@
         // 1. ตั้งค่าและเชื่อมต่อ Supabase Client
         const SUPABASE_URL = 'https://zlpxxwauxgwsvvukfqmx.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_mTmE2KIwTN0vsM7nDlePTg_rHJwCaNn';                 
-
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Product Data
-       // เปลี่ยนจาก const เป็น let และกำหนดเป็น array ว่าง
+        // State Variables
         let products = [];
-
-        // State
         let cart = [];
         let isCartOpen = false;
         let currentUser = null;
         let activeCategory = 'all';
-
-        // ==========================================
-        // 💡 จุดแก้ไขที่ 4: ตัวแปรเก็บอีเมลสำหรับการยืนยัน OTP
-        // ==========================================
         let pendingEmailForOTP = '';
 
         // Format Currency
@@ -432,7 +402,7 @@
             return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(price);
         };
 
-        // Filter Products by Category & Search
+        // Filter Products
         function filterProducts() {
             const searchTerm = document.getElementById('search-input').value.toLowerCase();
             const filtered = products.filter(p => {
@@ -445,30 +415,6 @@
 
         function filterCategory(category) {
             activeCategory = category;
-            // ฟังก์ชันดึงชื่อหมวดหมู่จากสินค้าใน Supabase มาสร้างเป็นปุ่มให้อัตโนมัติ
-        function renderCategoryButtons() {
-    // 1. ดึงชื่อหมวดหมู่ทั้งหมดที่มีอยู่ใน products แบบไม่ซ้ำกัน
-         const categories = ['all', ...new Set(products.map(p => p.category).filter(Boolean))];
-    
-    // 2. ค้นหาแถบปุ่มหมวดหมู่บนหน้าเว็บ
-        const container = document.querySelector('section div.flex.space-x-2');
-            if (!container) return;
-    
-            container.innerHTML = ''; // ล้างปุ่มเดิมออกก่อน
-
-    // 3. วาดปุ่มหมวดหมู่ใหม่ตามที่มีข้อมูลจริงใน Supabase
-        categories.forEach(cat => {
-         const btn = document.createElement('button');
-            const isAll = cat === 'all';
-            const label = isAll ? 'ทั้งหมด' : cat;
-        
-                btn.onclick = () => filterCategory(cat);
-                  btn.className = `category-btn ${cat === activeCategory ? 'bg-primary text-white font-medium shadow-sm' : 'bg-white hover:bg-gray-100 text-gray-700 font-medium border border-gray-200'} px-5 py-2 rounded-full text-sm whitespace-nowrap transition`;
-                     btn.innerText = label;
-        
-        container.appendChild(btn);
-    });
-}
             const buttons = document.querySelectorAll('.category-btn');
             buttons.forEach(btn => {
                 if (btn.innerText.includes(category) || (category === 'all' && btn.innerText === 'ทั้งหมด')) {
@@ -480,7 +426,28 @@
             filterProducts();
         }
 
-        // Render Products
+        // 💡 แก้ไขจุดที่ 1: แยกฟังก์ชัน renderCategoryButtons ออกมาอยู่นอก filterCategory
+        function renderCategoryButtons() {
+            const categories = ['all', ...new Set(products.map(p => p.category).filter(Boolean))];
+            const container = document.querySelector('section div.flex.space-x-2');
+            if (!container) return;
+            
+            container.innerHTML = '';
+
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                const isAll = cat === 'all';
+                const label = isAll ? 'ทั้งหมด' : cat;
+                
+                btn.onclick = () => filterCategory(cat);
+                btn.className = `category-btn ${cat === activeCategory ? 'bg-primary text-white font-medium shadow-sm' : 'bg-white hover:bg-gray-100 text-gray-700 font-medium border border-gray-200'} px-5 py-2 rounded-full text-sm whitespace-nowrap transition`;
+                btn.innerText = label;
+                
+                container.appendChild(btn);
+            });
+        }
+
+        // Render Products Grid
         function renderProducts(productList = products) {
             const grid = document.getElementById('product-grid');
             grid.innerHTML = '';
@@ -529,7 +496,7 @@
             });
         }
 
-        // Authentication Modal Logic
+        // Modal Controls
         function openAuthModal(tab = 'login') {
             switchAuthTab(tab);
             document.getElementById('auth-modal').classList.remove('hidden');
@@ -537,19 +504,17 @@
 
         function closeAuthModal() {
             document.getElementById('auth-modal').classList.add('hidden');
-            // รีเซ็ตฟอร์มเวลาปิด
             resetAuthForms();
         }
 
         function switchAuthTab(tab) {
             const loginForm = document.getElementById('form-login');
             const regForm = document.getElementById('form-register');
-            const otpForm = document.getElementById('form-otp'); // 💡 ฟอร์ม OTP
+            const otpForm = document.getElementById('form-otp');
             
             const tabLogin = document.getElementById('tab-login');
             const tabReg = document.getElementById('tab-register');
 
-            // 💡 ซ่อนฟอร์ม OTP เสมอถ้าผู้ใช้กดสลับแท็บไปมา
             if (otpForm) otpForm.classList.add('hidden');
 
             if (tab === 'login') {
@@ -565,9 +530,6 @@
             }
         }
 
-        // ==========================================
-        // 💡 จุดแก้ไขที่ 5: ฟังก์ชันช่วยรีเซ็ตฟอร์ม (ล้างข้อมูลตอนกดยกเลิกหรือปิด Modal)
-        // ==========================================
         function resetAuthForms() {
             document.getElementById('form-register').reset();
             document.getElementById('form-login').reset();
@@ -583,9 +545,6 @@
 
         // ==================== SUPABASE AUTHENTICATION SYSTEM ==================== //
 
-        // ==========================================
-        // 💡 จุดแก้ไขที่ 6: ปรับฟังก์ชันสมัครสมาชิกให้โชว์หน้า OTP แทนการแจ้งให้ไปกดลิงก์
-        // ==========================================
         async function handleRegister(event) {
             event.preventDefault();
             const btn = document.getElementById('reg-submit-btn');
@@ -606,19 +565,13 @@
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
-                    options: {
-                        data: { display_name: name }
-                    }
+                    options: { data: { display_name: name } }
                 });
 
                 if (error) throw error;
 
-                // 💡 เก็บอีเมลไว้เพื่อใช้ตรวจสอบในขั้นตอน OTP
                 pendingEmailForOTP = email;
-
                 showToast("ส่งรหัสยืนยันตัวตนไปยังอีเมลของคุณแล้ว!", "success");
-                
-                // 💡 สลับหน้าจอ: ซ่อนฟอร์มสมัคร -> เปิดฟอร์ม OTP
                 document.getElementById('form-register').classList.add('hidden');
                 document.getElementById('form-otp').classList.remove('hidden');
 
@@ -630,9 +583,6 @@
             }
         }
 
-        // ==========================================
-        // 💡 จุดแก้ไขที่ 7: เพิ่มฟังก์ชันตรวจสอบ OTP (ใหม่ล่าสุด!)
-        // ==========================================
         async function handleVerifyOTP(event) {
             event.preventDefault();
             const btn = document.getElementById('otp-submit-btn');
@@ -647,21 +597,16 @@
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังตรวจสอบรหัส...';
 
             try {
-                // 💡 ยืนยันรหัส OTP (Token) กับ Supabase
                 const { data, error } = await supabaseClient.auth.verifyOtp({
                     email: pendingEmailForOTP,
                     token: token,
-                    type: 'signup' // ประเภทคือการสมัครใหม่
+                    type: 'signup'
                 });
 
                 if (error) throw error;
 
                 showToast("ยืนยันอีเมลสำเร็จ! เข้าสู่ระบบเรียบร้อยแล้ว", "success");
-                
-                // ดึงข้อมูลผู้ใช้มาแสดงบนเว็บ
                 checkUserSession();
-                
-                // ปิด Modal และรีเซ็ตฟอร์ม
                 closeAuthModal();
 
             } catch (err) {
@@ -672,7 +617,6 @@
             }
         }
 
-        // 2. ฟังก์ชันเข้าสู่ระบบ (Login)
         async function handleLogin(event) {
             event.preventDefault();
             const btn = document.getElementById('login-submit-btn');
@@ -701,14 +645,13 @@
                 resetAuthForms();
                 showToast(`ยินดีต้อนรับกลับ, คุณ${currentUser.name}!`, "success");
             } catch (err) {
-                showToast("อีเมลหรือรหัสผ่านไม่ถูกต้อง", "error"); // ซ่อน error.message ไว้เพื่อความปลอดภัย
+                showToast("อีเมลหรือรหัสผ่านไม่ถูกต้อง", "error");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = 'เข้าสู่ระบบ';
             }
         }
 
-        // 3. ฟังก์ชันออกจากระบบ (Logout)
         async function logout() {
             try {
                 await supabaseClient.auth.signOut();
@@ -721,7 +664,6 @@
             }
         }
 
-        // 4. ฟังก์ชันเช็กสถานะล็อกอินค้างไว้ (Check Session)
         async function checkUserSession() {
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
@@ -738,8 +680,6 @@
                 console.error("Session check error:", err);
             }
         }
-
-        // ========================================================================= //
 
         function updateAuthUI() {
             const loginBtn = document.getElementById('login-btn');
@@ -869,35 +809,163 @@
             cartTotal.innerText = formatPrice(totalPrice);
         }
 
-        function checkout() {
+        // ฟังก์ชันชำระเงิน และบันทึกคำสั่งซื้อลง Supabase
+        async function checkout() {
             if (cart.length === 0) {
                 showToast("ตะกร้าสินค้าว่างเปล่า กรุณาเลือกสินค้าก่อน", "error");
+                return;
+            }
+
+            if (!currentUser) {
+                showToast("กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อสินค้า", "error");
+                openAuthModal('login');
                 return;
             }
             
             const btn = document.querySelector('#cart-panel button.w-full');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังดำเนินการ...';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังบันทึกออเดอร์...';
             btn.disabled = true;
-            btn.classList.add('opacity-75');
 
-            setTimeout(() => {
+            try {
+                const totalPrice = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+                const orderItems = cart.map(item => ({
+                    id: item.product.id,
+                    name: item.product.name,
+                    price: item.product.price,
+                    quantity: item.quantity,
+                    image: item.product.image
+                }));
+
+                const { data, error } = await supabaseClient
+                    .from('orders')
+                    .insert([
+                        {
+                            user_id: currentUser.id,
+                            user_email: currentUser.email,
+                            total_amount: totalPrice,
+                            items: orderItems,
+                            status: 'ชำระเงินแล้ว'
+                        }
+                    ]);
+
+                if (error) throw error;
+
                 cart = []; 
                 updateCartUI();
                 toggleCart(); 
                 
+                showToast("ชำระเงินสำเร็จ! บันทึกคำสั่งซื้อเรียบร้อยแล้ว", "success");
+
+            } catch (err) {
+                console.error("Order error:", err);
+                showToast("เกิดข้อผิดพลาดในการบันทึกออเดอร์: " + err.message, "error");
+            } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                btn.classList.remove('opacity-75');
-                
-                showToast("ชำระเงินสำเร็จ! ขอบคุณที่อุดหนุน", "success");
-            }, 1500);
+            }
+        }
+
+        // Order History Functions
+        function openOrdersModal() {
+            if (!currentUser) {
+                showToast("กรุณาเข้าสู่ระบบก่อนดูประวัติการสั่งซื้อ", "error");
+                openAuthModal('login');
+                return;
+            }
+            if (!document.getElementById('user-dropdown').classList.contains('hidden')) {
+                toggleUserDropdown();
+            }
+            document.getElementById('orders-modal').classList.remove('hidden');
+            fetchUserOrders();
+        }
+
+        function closeOrdersModal() {
+            document.getElementById('orders-modal').classList.add('hidden');
+        }
+
+        async function fetchUserOrders() {
+            const container = document.getElementById('orders-list-container');
+            container.innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-primary mb-2"></i>
+                    <p>กำลังโหลดประวัติการสั่งซื้อ...</p>
+                </div>
+            `;
+
+            try {
+                const { data: orders, error } = await supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!orders || orders.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-12">
+                            <i class="fa-solid fa-receipt text-5xl mb-3 opacity-20"></i>
+                            <p class="font-medium">คุณยังไม่มีประวัติการสั่งซื้อสินค้า</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '';
+                orders.forEach(order => {
+                    const dateStr = new Date(order.created_at).toLocaleDateString('th-TH', {
+                        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    });
+
+                    let itemsHtml = '';
+                    order.items.forEach(item => {
+                        itemsHtml += `
+                            <div class="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                                <img src="${item.image}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg bg-gray-100">
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-gray-800 leading-tight">${item.name}</p>
+                                    <p class="text-xs text-gray-500">${formatPrice(item.price)} x ${item.quantity}</p>
+                                </div>
+                                <span class="text-sm font-bold text-gray-700">${formatPrice(item.price * item.quantity)}</span>
+                            </div>
+                        `;
+                    });
+
+                    const orderCard = `
+                        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+                            <div class="flex flex-wrap justify-between items-center pb-3 mb-3 border-b border-gray-100 gap-2">
+                                <div>
+                                    <span class="text-xs font-bold text-gray-400">คำสั่งซื้อ #${order.id}</span>
+                                    <div class="text-xs text-gray-500"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</div>
+                                </div>
+                                <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">
+                                    <i class="fa-solid fa-circle-check mr-1"></i>${order.status || 'ชำระเงินแล้ว'}
+                                </span>
+                            </div>
+
+                            <div class="space-y-1 mb-3">
+                                ${itemsHtml}
+                            </div>
+
+                            <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                                <span class="text-sm font-medium text-gray-600">ราคารวมสุทธิ</span>
+                                <span class="text-lg font-bold text-primary">${formatPrice(order.total_amount)}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += orderCard;
+                });
+
+            } catch (err) {
+                console.error("Fetch orders error:", err);
+                container.innerHTML = `<div class="text-center text-red-500 py-6">เกิดข้อผิดพลาดในการดึงข้อมูล: ${err.message}</div>`;
+            }
         }
 
         // Custom Toast Notification System
         function showToast(message, type = "success") {
             const container = document.getElementById('toast-container');
-            
             const toast = document.createElement('div');
             toast.className = `toast-enter flex items-center p-4 mb-2 text-gray-900 bg-white rounded-lg shadow-xl border-l-4 min-w-[300px]`;
             
@@ -913,69 +981,46 @@
 
             setTimeout(() => {
                 toast.classList.replace('toast-enter', 'toast-exit');
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
+                setTimeout(() => { toast.remove(); }, 300);
             }, 3000);
+        }
+
+        // Fetch Products From Supabase
+        async function fetchProductsFromSupabase() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('*')
+                    .order('id', { ascending: true });
+
+                if (error) throw error;
+
+                products = data.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    category: item.category,
+                    price: item.price,
+                    originalPrice: item.original_price,
+                    rating: item.rating || 5.0,
+                    reviews: item.reviews || 0,
+                    image: item.image,
+                    badge: item.badge,
+                    stock: item.stock || 0
+                }));
+
+                renderProducts();
+                renderCategoryButtons();
+
+            } catch (err) {
+                showToast("ไม่สามารถโหลดรายการสินค้าได้: " + err.message, "error");
+            }
         }
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
-            // ฟังก์ชันดึงรายการสินค้าจากตาราง products ใน Supabase
-// ฟังก์ชันสร้างปุ่มหมวดหมู่อัตโนมัติจากสินค้าใน Supabase
-function renderCategoryButtons() {
-    const categories = ['all', ...new Set(products.map(p => p.category).filter(Boolean))];
-    const container = document.querySelector('section div.flex.space-x-2');
-    if (!container) return;
-    
-    container.innerHTML = ''; // ล้างปุ่มเดิมออกก่อน
-
-    categories.forEach(cat => {
-        const btn = document.createElement('button');
-        const isAll = cat === 'all';
-        const label = isAll ? 'ทั้งหมด' : cat;
-        
-        btn.onclick = () => filterCategory(cat);
-        btn.className = `category-btn ${cat === activeCategory ? 'bg-primary text-white font-medium shadow-sm' : 'bg-white hover:bg-gray-100 text-gray-700 font-medium border border-gray-200'} px-5 py-2 rounded-full text-sm whitespace-nowrap transition`;
-        btn.innerText = label;
-        
-        container.appendChild(btn);
-    });
-}
-            async function fetchProductsFromSupabase() {
-    try {
-        const { data, error } = await supabaseClient
-            .from('products')
-            .select('*')
-            .order('id', { ascending: true });
-
-        if (error) throw error;
-
-        // แปลงชื่อคอลัมน์จากฐานข้อมูล (original_price) ให้ตรงกับที่โค้ดหน้าเว็บใช้ (originalPrice)
-        products = data.map(item => ({
-            id: item.id,
-            name: item.name,
-            category: item.category,
-            price: item.price,
-            originalPrice: item.original_price,
-            rating: item.rating || 5.0,
-            reviews: item.reviews || 0,
-            image: item.image,
-            badge: item.badge,
-            stock: item.stock || 0
-        }));
-
-        // วาดรายการสินค้าลงบนหน้าเว็บเมื่อได้ข้อมูลมาแล้ว
-        renderProducts();
-        renderCategoryButtons();
-
-    } catch (err) {
-        showToast("ไม่สามารถโหลดรายการสินค้าได้: " + err.message, "error");
-    }
-}
             fetchProductsFromSupabase();
             updateCartUI();
-            checkUserSession(); // เรียกตรวจสอบการล็อกอินอัตโนมัติเมื่อเปิดหน้าเว็บ
+            checkUserSession();
         });
     </script>
 </body>
