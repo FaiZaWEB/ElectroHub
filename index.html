@@ -111,7 +111,6 @@
                             <!-- Dropdown Menu -->
                             <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 hidden border border-gray-100">
                                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"><i class="fa-regular fa-id-card mr-2 text-gray-400"></i> โปรไฟล์ของฉัน</a>
-                                <!-- 💡 แก้ไขจุดที่ 2: เชื่อมปุ่มเปิด Modal ประวัติการสั่งซื้อ -->
                                 <a href="#" onclick="openOrdersModal()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"><i class="fa-solid fa-box mr-2 text-gray-400"></i> ประวัติการสั่งซื้อ</a>
                                 <hr class="my-1 border-gray-100">
                                 <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"><i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> ออกจากระบบ</button>
@@ -382,12 +381,57 @@
         </div>
     </div>
 
+    <!-- Payment Modal (PromptPay QR Code) -->
+    <div id="payment-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closePaymentModal()"></div>
+        
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 z-10 overflow-hidden transform transition-all">
+            <div class="flex justify-between items-center pb-3 border-b mb-4">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                    <i class="fa-solid fa-qrcode text-primary mr-2"></i> ชำระเงินผ่าน PromptPay QR
+                </h3>
+                <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="text-center space-y-4">
+                <p class="text-xs text-gray-500">สแกน QR Code ด้วยแอปธนาคารใดก็ได้เพื่อชำระเงิน</p>
+                
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 inline-block shadow-inner">
+                    <img id="promptpay-qr-img" src="" alt="PromptPay QR Code" class="w-48 h-48 mx-auto object-contain">
+                    <p class="text-xs text-gray-500 mt-2 font-mono" id="promptpay-num-display">พร้อมเพย์: 081-234-5678</p>
+                </div>
+
+                <div class="bg-blue-50 p-3 rounded-xl">
+                    <span class="text-xs text-blue-600 block">ยอดชำระสุทธิ</span>
+                    <span id="payment-amount-display" class="text-2xl font-bold text-primary">฿0</span>
+                </div>
+
+                <div class="text-left space-y-1 pt-1">
+                    <label class="block text-xs font-bold text-gray-700">แนบสลิปการโอนเงิน (ถ้ามี):</label>
+                    <input type="file" id="slip-file-input" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-primary hover:file:bg-blue-100 transition">
+                </div>
+
+                <button id="confirm-payment-btn" onclick="submitPaymentWithSlip()" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-3 rounded-xl shadow-md transition mt-2 flex justify-center items-center text-sm">
+                    <i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการชำระเงิน
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript Logic -->
     <script>
-        // 1. ตั้งค่าและเชื่อมต่อ Supabase Client
+        // ==========================================
+        // 1. ตั้งค่าการเชื่อมต่อ API และตัวแปรระบบ
+        // ==========================================
         const SUPABASE_URL = 'https://zlpxxwauxgwsvvukfqmx.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_mTmE2KIwTN0vsM7nDlePTg_rHJwCaNn';                 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // 👈 ตั้งค่าระบบชำระเงิน และ แจ้งเตือน Discord ที่นี่
+        const PROMPTPAY_NUMBER = "0623910008"; 
+        const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1570114848656724109/ZYP72Deasv9zoUB-vdhG8ixueTXdWzmXV2FKWZ1IIyo3QMVIpgh3_udCftm-nuzyxrAY"; 
 
         // State Variables
         let products = [];
@@ -396,13 +440,16 @@
         let currentUser = null;
         let activeCategory = 'all';
         let pendingEmailForOTP = '';
+        let currentPendingOrder = null;
 
         // Format Currency
         const formatPrice = (price) => {
             return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(price);
         };
 
-        // Filter Products
+        // ==========================================
+        // 2. ฟังก์ชันจัดการสินค้าและหมวดหมู่
+        // ==========================================
         function filterProducts() {
             const searchTerm = document.getElementById('search-input').value.toLowerCase();
             const filtered = products.filter(p => {
@@ -426,14 +473,12 @@
             filterProducts();
         }
 
-        // 💡 แก้ไขจุดที่ 1: แยกฟังก์ชัน renderCategoryButtons ออกมาอยู่นอก filterCategory
         function renderCategoryButtons() {
             const categories = ['all', ...new Set(products.map(p => p.category).filter(Boolean))];
             const container = document.querySelector('section div.flex.space-x-2');
             if (!container) return;
             
             container.innerHTML = '';
-
             categories.forEach(cat => {
                 const btn = document.createElement('button');
                 const isAll = cat === 'all';
@@ -442,12 +487,10 @@
                 btn.onclick = () => filterCategory(cat);
                 btn.className = `category-btn ${cat === activeCategory ? 'bg-primary text-white font-medium shadow-sm' : 'bg-white hover:bg-gray-100 text-gray-700 font-medium border border-gray-200'} px-5 py-2 rounded-full text-sm whitespace-nowrap transition`;
                 btn.innerText = label;
-                
                 container.appendChild(btn);
             });
         }
 
-        // Render Products Grid
         function renderProducts(productList = products) {
             const grid = document.getElementById('product-grid');
             grid.innerHTML = '';
@@ -496,7 +539,9 @@
             });
         }
 
-        // Modal Controls
+        // ==========================================
+        // 3. ฟังก์ชันระบบผู้ใช้ (Auth)
+        // ==========================================
         function openAuthModal(tab = 'login') {
             switchAuthTab(tab);
             document.getElementById('auth-modal').classList.remove('hidden');
@@ -511,7 +556,6 @@
             const loginForm = document.getElementById('form-login');
             const regForm = document.getElementById('form-register');
             const otpForm = document.getElementById('form-otp');
-            
             const tabLogin = document.getElementById('tab-login');
             const tabReg = document.getElementById('tab-register');
 
@@ -542,8 +586,6 @@
             resetAuthForms();
             switchAuthTab('register');
         }
-
-        // ==================== SUPABASE AUTHENTICATION SYSTEM ==================== //
 
         async function handleRegister(event) {
             event.preventDefault();
@@ -703,7 +745,9 @@
             dropdown.classList.toggle('hidden');
         }
 
-        // Cart Functions
+        // ==========================================
+        // 4. ฟังก์ชันตะกร้าสินค้า (Cart)
+        // ==========================================
         function toggleCart() {
             const sidebar = document.getElementById('cart-sidebar');
             const backdrop = document.getElementById('cart-backdrop');
@@ -809,8 +853,12 @@
             cartTotal.innerText = formatPrice(totalPrice);
         }
 
-        // ฟังก์ชันชำระเงิน และบันทึกคำสั่งซื้อลง Supabase
-        async function checkout() {
+        // ==========================================
+        // 5. ระบบชำระเงินและแจ้งเตือน (Checkout & Payment)
+        // ==========================================
+        
+        // 5.1 เปิดหน้าต่างชำระเงิน QR Code
+        function checkout() {
             if (cart.length === 0) {
                 showToast("ตะกร้าสินค้าว่างเปล่า กรุณาเลือกสินค้าก่อน", "error");
                 return;
@@ -821,52 +869,124 @@
                 openAuthModal('login');
                 return;
             }
-            
-            const btn = document.querySelector('#cart-panel button.w-full');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังบันทึกออเดอร์...';
-            btn.disabled = true;
 
-            try {
-                const totalPrice = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-                const orderItems = cart.map(item => ({
+            const totalPrice = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+            
+            // สร้าง URL PromptPay QR สดๆ
+            const qrUrl = `https://promptpay.io/${PROMPTPAY_NUMBER}/${totalPrice}.png`;
+            document.getElementById('promptpay-qr-img').src = qrUrl;
+            document.getElementById('promptpay-num-display').innerText = `พร้อมเพย์: ${PROMPTPAY_NUMBER}`;
+            document.getElementById('payment-amount-display').innerText = formatPrice(totalPrice);
+
+            // เก็บออเดอร์พักไว้รอโอน
+            currentPendingOrder = {
+                totalPrice: totalPrice,
+                items: cart.map(item => ({
                     id: item.product.id,
                     name: item.product.name,
                     price: item.product.price,
                     quantity: item.quantity,
                     image: item.product.image
-                }));
+                }))
+            };
 
-                const { data, error } = await supabaseClient
+            toggleCart();
+            document.getElementById('payment-modal').classList.remove('hidden');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.add('hidden');
+            document.getElementById('slip-file-input').value = '';
+        }
+
+        // 5.2 ยืนยันสลิปและบันทึกลง Supabase
+        async function submitPaymentWithSlip() {
+            if (!currentPendingOrder) return;
+
+            const btn = document.getElementById('confirm-payment-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังบันทึกออเดอร์...';
+
+            try {
+                // บันทึกลงตาราง orders ใน Supabase
+                const { data: orderData, error: orderError } = await supabaseClient
                     .from('orders')
                     .insert([
                         {
                             user_id: currentUser.id,
                             user_email: currentUser.email,
-                            total_amount: totalPrice,
-                            items: orderItems,
-                            status: 'ชำระเงินแล้ว'
+                            total_amount: currentPendingOrder.totalPrice,
+                            items: currentPendingOrder.items,
+                            status: 'ชำระเงินแล้ว',
+                            payment_method: 'PromptPay QR',
+                            slip_url: null // อนาคตสามารถเพิ่มระบบอัปโหลดสลิปได้
                         }
-                    ]);
+                    ])
+                    .select();
 
-                if (error) throw error;
+                if (orderError) throw orderError;
 
-                cart = []; 
+                const newOrderId = orderData[0]?.id || 'N/A';
+
+                // แจ้งเตือนเข้า Discord
+                await sendDiscordNotification(newOrderId, currentUser.email, currentPendingOrder.totalPrice, currentPendingOrder.items);
+
+                // ล้างตะกร้า
+                cart = [];
                 updateCartUI();
-                toggleCart(); 
-                
-                showToast("ชำระเงินสำเร็จ! บันทึกคำสั่งซื้อเรียบร้อยแล้ว", "success");
+                closePaymentModal();
+                currentPendingOrder = null;
+
+                showToast("ชำระเงินและบันทึกคำสั่งซื้อเรียบร้อยแล้ว!", "success");
 
             } catch (err) {
-                console.error("Order error:", err);
+                console.error("Order submission error:", err);
                 showToast("เกิดข้อผิดพลาดในการบันทึกออเดอร์: " + err.message, "error");
             } finally {
-                btn.innerHTML = originalText;
                 btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการชำระเงิน';
             }
         }
 
-        // Order History Functions
+        // 5.3 ส่งข้อความเข้า Discord Webhook
+        async function sendDiscordNotification(orderId, userEmail, totalAmount, items) {
+            if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL === "YOUR_DISCORD_WEBHOOK_URL_HERE") return;
+
+            const itemListStr = items.map(i => `• **${i.name}** (x${i.quantity}) - ฿${(i.price * i.quantity).toLocaleString()}`).join('\n');
+
+            const discordPayload = {
+                username: "ElectroHub Bot",
+                avatar_url: "https://cdn-icons-png.flaticon.com/512/891/891462.png",
+                embeds: [
+                    {
+                        title: `🛒 มีคำสั่งซื้อใหม่เข้ามา! (ออเดอร์ #${orderId})`,
+                        color: 0x2563eb,
+                        fields: [
+                            { name: "👤 ผู้สั่งซื้อ", value: userEmail, inline: true },
+                            { name: "💳 ช่องทางชำระเงิน", value: "PromptPay QR Code", inline: true },
+                            { name: "💰 ยอดรวมสุทธิ", value: `**฿${totalAmount.toLocaleString()}**`, inline: false },
+                            { name: "📦 รายการสินค้า", value: itemListStr || "ไม่มีข้อมูล", inline: false }
+                        ],
+                        footer: { text: "ElectroHub E-Commerce Notification System" },
+                        timestamp: new Date().toISOString()
+                    }
+                ]
+            };
+
+            try {
+                await fetch(DISCORD_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(discordPayload)
+                });
+            } catch (err) {
+                console.error("Discord Notification error:", err);
+            }
+        }
+
+        // ==========================================
+        // 6. ฟังก์ชันประวัติการสั่งซื้อ (Order History)
+        // ==========================================
         function openOrdersModal() {
             if (!currentUser) {
                 showToast("กรุณาเข้าสู่ระบบก่อนดูประวัติการสั่งซื้อ", "error");
@@ -943,11 +1063,9 @@
                                     <i class="fa-solid fa-circle-check mr-1"></i>${order.status || 'ชำระเงินแล้ว'}
                                 </span>
                             </div>
-
                             <div class="space-y-1 mb-3">
                                 ${itemsHtml}
                             </div>
-
                             <div class="flex justify-between items-center pt-2 border-t border-gray-100">
                                 <span class="text-sm font-medium text-gray-600">ราคารวมสุทธิ</span>
                                 <span class="text-lg font-bold text-primary">${formatPrice(order.total_amount)}</span>
@@ -963,7 +1081,9 @@
             }
         }
 
-        // Custom Toast Notification System
+        // ==========================================
+        // 7. ฟังก์ชันอื่นๆ
+        // ==========================================
         function showToast(message, type = "success") {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -985,7 +1105,6 @@
             }, 3000);
         }
 
-        // Fetch Products From Supabase
         async function fetchProductsFromSupabase() {
             try {
                 const { data, error } = await supabaseClient
