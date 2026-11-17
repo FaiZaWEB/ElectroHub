@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รายละเอียดสินค้า - ElectroHub</title>
+    <title>ElectroHub - ร้านขายอุปกรณ์อิเล็กทรอนิกส์ชั้นนำ</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter & Kanit -->
+    <!-- Google Fonts: Inter & Kanit (for Thai) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- FontAwesome -->
+    <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Supabase JS Client SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -17,8 +17,13 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Kanit', 'Inter', 'sans-serif'] },
-                    colors: { primary: '#2563eb', secondary: '#1e293b' }
+                    fontFamily: {
+                        sans: ['Kanit', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563eb', // Blue 600
+                        secondary: '#1e293b', // Slate 800
+                    }
                 }
             }
         }
@@ -27,8 +32,16 @@
         .cart-scroll::-webkit-scrollbar { width: 6px; }
         .cart-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
         .cart-scroll::-webkit-scrollbar-thumb { background: #b8b8b8; border-radius: 10px; }
-        @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        .cart-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        @keyframes slideInUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
         .toast-enter { animation: slideInUp 0.3s ease-out forwards; }
         .toast-exit { animation: fadeOut 0.3s ease-out forwards; }
     </style>
@@ -39,113 +52,374 @@
     <nav class="bg-white shadow-sm sticky top-0 z-40 w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <!-- Logo กลับหน้าแรก -->
-                <a href="index.html" class="flex-shrink-0 flex items-center cursor-pointer">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="switchPage('home')">
                     <i class="fa-solid fa-microchip text-primary text-2xl mr-2"></i>
                     <span class="font-bold text-xl sm:text-2xl tracking-tight text-secondary">Electro<span class="text-primary">Hub</span></span>
-                </a>
+                </div>
                 
-                <!-- Right Actions: User Status, Cart & Back -->
-                <div class="flex items-center space-x-2 sm:space-x-3">
-                    <!-- แสดงสถานะผู้ใช้ -->
-                    <div id="user-badge" class="hidden sm:flex items-center bg-blue-50 text-primary text-xs font-medium px-3 py-1.5 rounded-full">
-                        <i class="fa-solid fa-user-check mr-1.5"></i> <span id="user-name-label">สมาชิก</span>
-                    </div>
-                    <a id="login-link-btn" href="index.html" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-3 py-2 rounded-full text-xs sm:text-sm transition">
-                        เข้าสู่ระบบ
-                    </a>
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-6 lg:space-x-8 items-center">
+                    <button onclick="switchPage('home')" id="nav-home" class="nav-link text-primary font-semibold transition">หน้าแรก</button>
+                    <button onclick="toggleCategoryDrawer()" class="text-gray-600 hover:text-primary transition font-medium flex items-center">
+                        <i class="fa-solid fa-layer-group mr-1.5 text-xs text-primary"></i> หมวดหมู่สินค้า
+                    </button>
+                    <button onclick="switchPage('promo')" id="nav-promo" class="nav-link text-gray-600 hover:text-primary transition font-medium flex items-center">
+                        <i class="fa-solid fa-bolt text-amber-500 mr-1.5"></i> โปรโมชั่นพิเศษ
+                    </button>
+                    <button onclick="switchPage('contact')" id="nav-contact" class="nav-link text-gray-600 hover:text-primary transition font-medium">ติดต่อเรา</button>
+                </div>
 
-                    <!-- ปุ่มเปิดตะกร้าสินค้า -->
+                <!-- Search Bar (Desktop) -->
+                <div class="hidden lg:flex items-center flex-1 max-w-xs mx-6">
+                    <div class="relative w-full">
+                        <input type="text" id="search-input" onkeyup="handleSearchInput()" placeholder="ค้นหาสินค้า..." class="w-full bg-gray-100 text-sm pl-9 pr-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                    </div>
+                </div>
+
+                <!-- Right Actions: Auth & Cart -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <div id="auth-section">
+                        <button id="login-btn" onclick="openAuthModal('login')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition flex items-center whitespace-nowrap">
+                            <i class="fa-regular fa-user sm:mr-2"></i> <span class="hidden sm:inline">เข้าสู่ระบบ</span>
+                        </button>
+
+                        <div id="user-menu" class="relative hidden">
+                            <button onclick="toggleUserDropdown()" class="flex items-center space-x-1.5 sm:space-x-2 bg-blue-50 text-primary font-medium px-2.5 sm:px-3 py-1.5 rounded-full hover:bg-blue-100 transition focus:outline-none">
+                                <div class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs" id="user-avatar">U</div>
+                                <span id="user-display-name" class="text-xs sm:text-sm max-w-[90px] sm:max-w-[140px] truncate">คุณสมชาย</span>
+                                <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
+                            </button>
+
+                            <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 hidden border border-gray-100">
+                                <a href="#" onclick="openOrdersModal()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"><i class="fa-solid fa-box mr-2 text-gray-400"></i> ประวัติการสั่งซื้อ</a>
+                                <hr class="my-1 border-gray-100">
+                                <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"><i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> ออกจากระบบ</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <button onclick="toggleCart()" class="relative p-2 text-gray-600 hover:text-primary transition focus:outline-none">
                         <i class="fa-solid fa-cart-shopping text-xl"></i>
                         <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full">0</span>
                     </button>
-
-                    <!-- ปุ่มย้อนกลับ -->
-                    <a href="index.html" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition flex items-center">
-                        <i class="fa-solid fa-arrow-left sm:mr-2"></i> <span class="hidden sm:inline">หน้าร้าน</span>
-                    </a>
+                    
+                    <div class="md:hidden">
+                        <button onclick="toggleCategoryDrawer()" class="text-gray-600 hover:text-primary focus:outline-none p-2">
+                            <i class="fa-solid fa-bars text-xl"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        <!-- Breadcrumb -->
-        <nav class="text-xs sm:text-sm text-gray-500 mb-6 flex items-center space-x-2">
-            <a href="index.html" class="hover:text-primary">หน้าแรก</a>
-            <span>/</span>
-            <span id="breadcrumb-category" class="text-gray-700">หมวดหมู่</span>
-            <span>/</span>
-            <span id="breadcrumb-name" class="text-primary font-medium truncate">กำลังโหลด...</span>
-        </nav>
+    <!-- ===================================================================== -->
+    <!-- PAGE 1: หน้าแรก (HOME VIEW) -->
+    <!-- ===================================================================== -->
+    <div id="page-home" class="page-view flex-grow flex flex-col">
+        <!-- Hero Section -->
+        <div class="bg-secondary text-white relative overflow-hidden min-h-[420px] md:min-h-[560px] flex items-center w-full">
+            <div class="absolute inset-0 z-0">
+                <img src="./images/electronics_banner_1920x600.png" alt="ElectroHub Background" class="w-full h-full object-cover object-center">
+                <div class="absolute inset-0 bg-gradient-to-r from-slate-900/85 via-slate-900/50 to-transparent"></div>
+            </div>
 
-        <!-- Loading State -->
-        <div id="loading-state" class="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
-            <i class="fa-solid fa-circle-notch fa-spin text-4xl text-primary mb-3"></i>
-            <p class="text-gray-500">กำลังโหลดข้อมูลรายละเอียดสินค้า...</p>
-        </div>
-
-        <!-- Product Detail Container -->
-        <div id="product-detail-card" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 sm:p-10">
-                <!-- รูปภาพสินค้า -->
-                <div class="relative bg-gray-100 rounded-2xl overflow-hidden aspect-[4/3] flex items-center justify-center border border-gray-100">
-                    <div id="detail-badge" class="hidden absolute top-4 left-4 bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm z-10"></div>
-                    <img id="detail-image" src="" alt="Product Image" class="w-full h-full object-cover object-center">
-                </div>
-
-                <!-- ข้อมูลและรายละเอียดสินค้า -->
-                <div class="flex flex-col">
-                    <span id="detail-category" class="inline-block w-fit bg-blue-50 text-primary text-xs font-semibold px-3 py-1 rounded-full mb-2"></span>
-                    <h1 id="detail-name" class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 leading-snug"></h1>
-                    
-                    <!-- คะแนนรีวิว & สต็อก -->
-                    <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-4 pb-4 border-b border-gray-100">
-                        <div id="detail-rating" class="flex items-center text-yellow-400"></div>
-                        <span>|</span>
-                        <div id="detail-stock" class="font-medium text-green-600">
-                            <i class="fa-solid fa-circle-check mr-1"></i> มีสินค้าพร้อมส่ง
-                        </div>
-                    </div>
-
-                    <!-- ราคา -->
-                    <div class="bg-gray-50 p-4 rounded-xl mb-6">
-                        <span class="text-xs text-gray-500 block mb-1">ราคาพิเศษ</span>
-                        <div class="flex items-baseline gap-3">
-                            <span id="detail-price" class="text-3xl font-extrabold text-primary"></span>
-                            <span id="detail-original-price" class="text-base text-gray-400 line-through hidden"></span>
-                        </div>
-                    </div>
-
-                    <!-- คำอธิบายสินค้า -->
-                    <div class="mb-6">
-                        <h3 class="text-sm font-bold text-gray-900 mb-2">รายละเอียดสินค้า</h3>
-                        <p id="detail-description" class="text-sm text-gray-600 leading-relaxed whitespace-pre-line"></p>
-                    </div>
-
-                    <!-- ตารางสเปกสินค้า -->
-                    <div class="mb-8">
-                        <h3 class="text-sm font-bold text-gray-900 mb-2">ข้อมูลจำเพาะ / สเปก (Specifications)</h3>
-                        <div id="detail-specs-container" class="bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm space-y-2"></div>
-                    </div>
-
-                    <!-- ปุ่มหยิบใส่ตะกร้า และ ปุ่มสั่งซื้อเลย -->
-                    <div class="mt-auto flex flex-col sm:flex-row gap-3">
-                        <button onclick="addCurrentProductToCart(false)" class="flex-1 bg-blue-50 hover:bg-blue-100 text-primary border border-blue-200 font-semibold py-3.5 px-6 rounded-xl transition flex items-center justify-center text-sm">
-                            <i class="fa-solid fa-cart-plus mr-2"></i> เพิ่มลงตะกร้า
-                        </button>
-                        <button onclick="addCurrentProductToCart(true)" class="flex-1 bg-primary hover:bg-blue-700 text-white font-semibold py-3.5 px-6 rounded-xl shadow-md transition flex items-center justify-center text-sm">
-                            <i class="fa-solid fa-bolt mr-2"></i> สั่งซื้อสินค้าทันที
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 relative z-10 w-full">
+                <div class="md:w-2/3 lg:w-1/2">
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
+                        นวัตกรรมแห่งอนาคต <br>
+                        <span class="text-primary">อยู่ในมือคุณแล้ววันนี้</span>
+                    </h1>
+                    <p class="text-base sm:text-lg text-gray-300 mb-8 max-w-xl">
+                        พบกับสมาร์ทโฟน แล็ปท็อป และอุปกรณ์แกดเจ็ตระดับพรีเมียมในราคาพิเศษ พร้อมบริการจัดส่งฟรีทั่วประเทศ
+                    </p>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="#products" class="inline-block bg-primary hover:bg-blue-700 text-white font-medium py-3 px-7 rounded-full shadow-lg transition transform hover:-translate-y-1">
+                            ช้อปเลยตอนนี้
+                        </a>
+                        <button onclick="switchPage('promo')" class="inline-flex items-center bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 px-7 rounded-full shadow-lg transition transform hover:-translate-y-1">
+                            <i class="fa-solid fa-bolt mr-2"></i> Flash Sale ลดสูงสุด 15%
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-    </main>
 
-    <!-- Shopping Cart Sidebar (ลิงก์ข้อมูลร่วมกับหน้าแรก) -->
+        <!-- Category Filters Bar (เมนู 3 ขีดเลือกหมวดหมู่) -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 w-full">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex flex-wrap items-center gap-3">
+                    <button onclick="toggleCategoryDrawer()" class="flex items-center space-x-2.5 bg-primary hover:bg-blue-700 text-white font-medium px-4 py-2.5 rounded-xl shadow-sm transition focus:outline-none">
+                        <i class="fa-solid fa-bars text-lg"></i>
+                        <span>เลือกหมวดหมู่สินค้า</span>
+                    </button>
+                    <div class="text-sm text-gray-600 flex items-center bg-gray-50 px-3 py-2 rounded-xl border border-gray-200">
+                        <span class="text-gray-500 mr-1.5">หมวดหมู่:</span>
+                        <span id="current-category-label" class="font-bold text-primary">ทั้งหมด</span>
+                    </div>
+                </div>
+
+                <!-- Mobile Search -->
+                <div class="w-full sm:w-auto flex-1 max-w-sm lg:hidden">
+                    <div class="relative w-full">
+                        <input type="text" id="mobile-search-input" onkeyup="syncMobileSearch(this.value)" placeholder="ค้นหาสินค้า..." class="w-full bg-gray-100 text-sm pl-9 pr-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content: Products -->
+        <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full" id="products">
+            <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Products injected via JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- PAGE 2: หน้าโปรโมชั่นพิเศษ FLASH SALE (PROMOTION VIEW) -->
+    <!-- ===================================================================== -->
+    <div id="page-promo" class="page-view hidden flex-grow flex flex-col">
+        <div class="bg-gradient-to-r from-red-600 via-orange-600 to-amber-500 text-white py-12 px-4 sm:px-6 lg:px-8 shadow-inner">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                    <div class="inline-flex items-center bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase mb-3">
+                        <i class="fa-solid fa-fire text-yellow-300 mr-1.5"></i> ดีลเดือดจำนวนจำกัด
+                    </div>
+                    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight flex items-center">
+                        <i class="fa-solid fa-bolt text-yellow-300 mr-3 animate-pulse"></i> FLASH SALE
+                    </h1>
+                    <p class="text-white/90 text-base sm:text-lg mt-2">
+                        คัดสินค้าตัวท็อปในร้านมาลดราคาพิเศษทันที <span class="font-bold underline decoration-yellow-300">5% - 15%</span> หมดแล้วหมดเลย!
+                    </p>
+                </div>
+
+                <!-- Countdown Timer -->
+                <div class="bg-slate-900/80 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/10 text-center">
+                    <p class="text-xs text-gray-300 mb-2 font-medium">สิ้นสุดโปรโมชั่นรอบนี้ในอีก</p>
+                    <div class="flex items-center space-x-2 sm:space-x-3 text-white font-mono">
+                        <div class="bg-red-600 px-3 py-2 rounded-xl min-w-[56px]">
+                            <span id="fs-hours" class="text-2xl sm:text-3xl font-bold block">05</span>
+                            <span class="text-[10px] text-red-100">ชั่วโมง</span>
+                        </div>
+                        <span class="text-2xl font-bold">:</span>
+                        <div class="bg-red-600 px-3 py-2 rounded-xl min-w-[56px]">
+                            <span id="fs-minutes" class="text-2xl sm:text-3xl font-bold block">42</span>
+                            <span class="text-[10px] text-red-100">นาที</span>
+                        </div>
+                        <span class="text-2xl font-bold">:</span>
+                        <div class="bg-red-600 px-3 py-2 rounded-xl min-w-[56px]">
+                            <span id="fs-seconds" class="text-2xl sm:text-3xl font-bold block">19</span>
+                            <span class="text-[10px] text-red-100">วินาที</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-grow">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                    <i class="fa-solid fa-tags text-red-500 mr-2"></i> สินค้าร่วมรายการลดราคาพิเศษ (5% - 15%)
+                </h2>
+                <button onclick="switchPage('home')" class="text-sm text-primary hover:underline font-medium">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> ดูสินค้าปกติทั้งหมด
+                </button>
+            </div>
+
+            <div id="flash-sale-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Flash Sale items injected via JS -->
+            </div>
+        </section>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- PAGE 3: หน้าติดต่อเรา (CONTACT US VIEW) -->
+    <!-- ===================================================================== -->
+    <div id="page-contact" class="page-view hidden flex-grow flex flex-col">
+        <div class="bg-secondary text-white py-12 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto text-center">
+                <h1 class="text-3xl sm:text-4xl font-bold mb-3">ติดต่อเรา (Contact Us)</h1>
+                <p class="text-gray-300 max-w-2xl mx-auto text-sm sm:text-base">
+                    มีข้อสงสัยเกี่ยวกับสินค้า ต้องการคำแนะนำสเปกอุปกรณ์ หรือแจ้งปัญหาคำสั่งซื้อ ทีมงาน ElectroHub พร้อมดูแลคุณ
+                </p>
+            </div>
+        </div>
+
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-grow">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="space-y-4">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                            <i class="fa-solid fa-store text-primary mr-2"></i> ข้อมูลร้าน ElectroHub
+                        </h3>
+                        <div class="space-y-4 text-sm text-gray-600">
+                            <div class="flex items-start">
+                                <div class="w-9 h-9 rounded-xl bg-blue-50 text-primary flex items-center justify-center flex-shrink-0 mr-3">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">ที่ตั้งหน้าร้าน / ศูนย์บริการ</p>
+                                    <p>99/9 อาคารไอทีมอลล์ ถนนเทคโนโลยี แขวงนวัตกรรม เขตดิจิทัล 10400</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0 mr-3">
+                                    <i class="fa-solid fa-phone"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">เบอร์โทรศัพท์ฝ่ายบริการลูกค้า</p>
+                                    <p>062-391-0008 (ทุกวัน 09:00 - 20:00 น.)</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 mr-3">
+                                    <i class="fa-solid fa-envelope"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">อีเมลติดต่อ</p>
+                                    <p>support@electrohub-shop.com</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 mr-3">
+                                    <i class="fa-brands fa-line text-lg"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">LINE Official</p>
+                                    <p>@ElectroHubTH</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">ส่งข้อความถึงทีมงาน</h3>
+                    <p class="text-sm text-gray-500 mb-6">กรอกรายละเอียดด้านล่าง ข้อความของคุณจะถูกส่งตรงไปยังแอดมินทันที</p>
+
+                    <form id="contact-form" onsubmit="handleContactSubmit(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล ของคุณ *</label>
+                                <input type="text" id="contact-name" required placeholder="เช่น สมชาย ใจดี" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล หรือ เบอร์โทรติดต่อกลับ *</label>
+                                <input type="text" id="contact-email" required placeholder="name@example.com / 08X-XXX-XXXX" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">หัวข้อที่ต้องการติดต่อ *</label>
+                            <select id="contact-subject" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-white">
+                                <option value="สอบถามข้อมูลสินค้า / สเปกอุปกรณ์">สอบถามข้อมูลสินค้า / สเปกอุปกรณ์</option>
+                                <option value="ติดตามสถานะคำสั่งซื้อ / การจัดส่ง">ติดตามสถานะคำสั่งซื้อ / การจัดส่ง</option>
+                                <option value="แจ้งเคลมสินค้า / สินค้ามีปัญหา">แจ้งเคลมสินค้า / สินค้ามีปัญหา</option>
+                                <option value="อื่นๆ">อื่นๆ</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">รายละเอียดข้อความ *</label>
+                            <textarea id="contact-message" rows="4" required placeholder="พิมพ์ข้อความหรือรายละเอียดที่ต้องการสอบถาม..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm"></textarea>
+                        </div>
+                        <button type="submit" id="contact-submit-btn" class="w-full sm:w-auto bg-primary hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-xl shadow-md transition flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-paper-plane mr-2"></i> ส่งข้อความติดต่อเรา
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Category Sidebar Drawer (เมนู 3 ขีด) -->
+    <div id="category-drawer" class="fixed inset-0 z-50 invisible">
+        <div id="category-backdrop" class="absolute inset-0 bg-black bg-opacity-50 opacity-0 transition-opacity duration-300" onclick="toggleCategoryDrawer()"></div>
+        
+        <div id="category-panel" class="absolute inset-y-0 left-0 max-w-xs w-[85vw] sm:w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="text-lg font-bold text-gray-900 flex items-center">
+                    <i class="fa-solid fa-layer-group mr-2 text-primary"></i> เมนู & หมวดหมู่
+                </h2>
+                <button onclick="toggleCategoryDrawer()" class="text-gray-400 hover:text-gray-600 focus:outline-none p-2">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="p-4 flex-1 overflow-y-auto cart-scroll">
+                <div class="mb-6 pb-4 border-b border-gray-100">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">เมนูหน้าเว็บ</p>
+                    <div class="space-y-1">
+                        <button onclick="switchPage('home'); toggleCategoryDrawer();" class="w-full flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-primary transition">
+                            <i class="fa-solid fa-house mr-3 text-gray-400 w-4 text-center"></i> หน้าแรก
+                        </button>
+                        <button onclick="switchPage('promo'); toggleCategoryDrawer();" class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 transition">
+                            <span class="flex items-center">
+                                <i class="fa-solid fa-bolt mr-3 text-amber-500 w-4 text-center"></i> โปรโมชั่นพิเศษ
+                            </span>
+                            <span class="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full">ลด 5-15%</span>
+                        </button>
+                        <button onclick="switchPage('contact'); toggleCategoryDrawer();" class="w-full flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-primary transition">
+                            <i class="fa-solid fa-headset mr-3 text-gray-400 w-4 text-center"></i> ติดต่อเรา
+                        </button>
+                    </div>
+                </div>
+
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">เลือกตามหมวดหมู่สินค้า</p>
+                <div id="category-list-container" class="space-y-1.5">
+                    <!-- ปุ่มหมวดหมู่จะถูกสร้างอัตโนมัติผ่าน JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 py-12 mt-auto w-full">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <i class="fa-solid fa-microchip text-primary text-2xl mr-2"></i>
+                        <span class="font-bold text-xl text-white">ElectroHub</span>
+                    </div>
+                    <p class="text-gray-400 text-sm">แหล่งรวมอุปกรณ์อิเล็กทรอนิกส์และแกดเจ็ตชั้นนำ การันตีของแท้ 100% พร้อมบริการหลังการขายที่ยอดเยี่ยม</p>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold mb-4">เมนูหลัก</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><button onclick="switchPage('home')" class="hover:text-primary transition">หน้าแรก / สินค้าทั้งหมด</button></li>
+                        <li><button onclick="toggleCategoryDrawer()" class="hover:text-primary transition">หมวดหมู่สินค้า</button></li>
+                        <li><button onclick="switchPage('promo')" class="hover:text-amber-400 transition text-amber-300"><i class="fa-solid fa-bolt mr-1"></i> โปรโมชั่น Flash Sale</button></li>
+                        <li><button onclick="switchPage('contact')" class="hover:text-primary transition">ติดต่อเรา</button></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold mb-4">ช่วยเหลือ</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><button onclick="switchPage('contact')" class="hover:text-primary transition">การจัดส่งสินค้า</button></li>
+                        <li><button onclick="switchPage('contact')" class="hover:text-primary transition">นโยบายการคืนสินค้า</button></li>
+                        <li><button onclick="switchPage('contact')" class="hover:text-primary transition">แจ้งปัญหา / เคลมสินค้า</button></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold mb-4">ติดตามเรา</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition"><i class="fa-brands fa-line"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
+                <p>&copy; 2024 ElectroHub. สงวนลิขสิทธิ์.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Shopping Cart Sidebar -->
     <div id="cart-sidebar" class="fixed inset-0 z-50 invisible">
         <div id="cart-backdrop" class="absolute inset-0 bg-black bg-opacity-50 opacity-0 transition-opacity duration-300" onclick="toggleCart()"></div>
         <div id="cart-panel" class="absolute inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
@@ -160,6 +434,7 @@
                 <div id="empty-cart-msg" class="text-center text-gray-500 py-10 flex flex-col items-center">
                     <i class="fa-solid fa-basket-shopping text-4xl mb-3 opacity-20"></i>
                     <p>ตะกร้าสินค้าว่างเปล่า</p>
+                    <button onclick="toggleCart()" class="mt-4 text-primary font-medium hover:underline">ไปช้อปปิ้งกันเลย</button>
                 </div>
             </div>
 
@@ -176,9 +451,131 @@
         </div>
     </div>
 
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-4 left-4 sm:left-auto sm:right-5 z-50 flex flex-col gap-2"></div>
+
+    <!-- Login / Register Modal -->
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closeAuthModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden z-10 transform transition-all">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2 z-20">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <div class="flex border-b">
+                <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-4 font-bold text-center border-b-2 border-primary text-primary transition">
+                    เข้าสู่ระบบ
+                </button>
+                <button id="tab-register" onclick="switchAuthTab('register')" class="flex-1 py-4 font-bold text-center border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition">
+                    สมัครสมาชิก
+                </button>
+            </div>
+
+            <div class="p-6">
+                <!-- LOGIN FORM -->
+                <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                        <div class="relative">
+                            <i class="fa-regular fa-envelope absolute left-3 top-3 text-gray-400"></i>
+                            <input type="email" id="login-email" required placeholder="name@example.com" autocomplete="off" autocapitalize="none" spellcheck="false" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400"></i>
+                            <input type="password" id="login-password" required placeholder="••••••••" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                        </div>
+                    </div>
+                    <button type="submit" id="login-submit-btn" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
+                        เข้าสู่ระบบ
+                    </button>
+                </form>
+
+                <!-- REGISTER FORM -->
+                <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล</label>
+                        <div class="relative">
+                            <i class="fa-regular fa-user absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" id="reg-name" required placeholder="สมชาย ใจดี" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                        <div class="relative">
+                            <i class="fa-regular fa-envelope absolute left-3 top-3 text-gray-400"></i>
+                            <input type="email" id="reg-email" required placeholder="name@example.com" autocomplete="off" autocapitalize="none" spellcheck="false" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400"></i>
+                            <input type="password" id="reg-password" required placeholder="อย่างน้อย 6 ตัวอักษร" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ยืนยันรหัสผ่าน</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-shield-halved absolute left-3 top-3 text-gray-400"></i>
+                            <input type="password" id="reg-confirm-password" required placeholder="••••••••" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                        </div>
+                    </div>
+                    <button type="submit" id="reg-submit-btn" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
+                        สมัครสมาชิก
+                    </button>
+                </form>
+
+                <!-- OTP VERIFICATION FORM -->
+                <form id="form-otp" onsubmit="handleVerifyOTP(event)" class="space-y-4 hidden">
+                    <div class="text-center mb-4">
+                        <i class="fa-solid fa-envelope-circle-check text-4xl text-primary mb-2"></i>
+                        <h3 class="font-bold text-gray-800">ยืนยันอีเมลของคุณ</h3>
+                        <p class="text-xs text-gray-500">ระบบได้ส่งรหัส OTP (Token) ไปที่อีเมลของคุณแล้ว</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">กรอกรหัสยืนยันตัวตนจากอีเมล</label>
+                        <input type="text" id="otp-code" required placeholder="กรอกรหัสจากอีเมล" autocomplete="off" class="w-full text-center text-xl tracking-widest py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary font-mono">
+                    </div>
+                    <button type="submit" id="otp-submit-btn" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
+                        ยืนยันรหัส OTP
+                    </button>
+                    <button type="button" onclick="cancelOTP()" class="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 rounded-xl transition text-sm">
+                        ยกเลิก / สมัครใหม่อีกครั้ง
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order History Modal -->
+    <div id="orders-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closeOrdersModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col z-10 overflow-hidden">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                    <i class="fa-solid fa-box-archive mr-2 text-primary"></i> ประวัติการสั่งซื้อของฉัน
+                </h3>
+                <button onclick="closeOrdersModal()" class="text-gray-400 hover:text-gray-600 p-2">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div id="orders-list-container" class="p-6 overflow-y-auto space-y-4 flex-1 cart-scroll">
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-primary mb-2"></i>
+                    <p>กำลังโหลดประวัติการสั่งซื้อ...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Payment Modal (PromptPay QR Code) -->
     <div id="payment-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
         <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closePaymentModal()"></div>
+        
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 z-10 overflow-hidden transform transition-all">
             <div class="flex justify-between items-center pb-3 border-b mb-4">
                 <h3 class="text-lg font-bold text-gray-900 flex items-center">
@@ -191,18 +588,22 @@
 
             <div class="text-center space-y-4">
                 <p class="text-xs text-gray-500">สแกน QR Code ด้วยแอปธนาคารใดก็ได้เพื่อชำระเงิน</p>
+                
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 inline-block shadow-inner">
                     <img id="promptpay-qr-img" src="" alt="PromptPay QR Code" class="w-48 h-48 mx-auto object-contain">
                     <p class="text-xs text-gray-500 mt-2 font-mono" id="promptpay-num-display">พร้อมเพย์: 062-391-0008</p>
                 </div>
+
                 <div class="bg-blue-50 p-3 rounded-xl">
                     <span class="text-xs text-blue-600 block">ยอดชำระสุทธิ</span>
                     <span id="payment-amount-display" class="text-2xl font-bold text-primary">฿0</span>
                 </div>
+
                 <div class="text-left space-y-1 pt-1">
                     <label class="block text-xs font-bold text-gray-700">แนบสลิปการโอนเงิน (ถ้ามี):</label>
                     <input type="file" id="slip-file-input" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-primary hover:file:bg-blue-100 transition">
                 </div>
+
                 <button id="confirm-payment-btn" onclick="submitPaymentWithSlip()" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-3 rounded-xl shadow-md transition mt-2 flex justify-center items-center text-sm">
                     <i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการชำระเงิน
                 </button>
@@ -210,15 +611,11 @@
         </div>
     </div>
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="fixed bottom-5 right-4 left-4 sm:left-auto sm:right-5 z-50 flex flex-col gap-2"></div>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-gray-400 py-8 mt-auto text-center text-sm">
-        <p>&copy; 2024 ElectroHub. สงวนลิขสิทธิ์.</p>
-    </footer>
-
+    <!-- JavaScript Logic -->
     <script>
+        // ==========================================
+        // 1. ตั้งค่าการเชื่อมต่อ API และตัวแปรระบบ
+        // ==========================================
         const SUPABASE_URL = 'https://zlpxxwauxgwsvvukfqmx.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_mTmE2KIwTN0vsM7nDlePTg_rHJwCaNn';                 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -226,155 +623,589 @@
         const PROMPTPAY_NUMBER = "0623910008"; 
         const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1570114848656724109/ZYP72Deasv9zoUB-vdhG8ixueTXdWzmXV2FKWZ1IIyo3QMVIpgh3_udCftm-nuzyxrAY"; 
 
-        let currentProduct = null;
-        let currentUser = null;
+        // State Variables
+        let products = [];
+        let flashSaleProducts = [];
+        let cart = [];
         let isCartOpen = false;
+        let isCategoryOpen = false;
+        let currentUser = null;
+        let activeCategory = 'all';
+        let pendingEmailForOTP = '';
         let currentPendingOrder = null;
 
-        // ดึงข้อมูลตะกร้าที่ซิงค์ร่วมกับหน้า index.html ผ่าน localStorage
-        let cart = JSON.parse(localStorage.getItem('electrohub_cart')) || [];
-        const saveCartToStorage = () => localStorage.setItem('electrohub_cart', JSON.stringify(cart));
-
+        // Format Currency
         const formatPrice = (price) => {
             return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(price);
         };
 
-        // ตรวจสอบสถานะล็อกอินร่วมกับหน้า index.html อัตโนมัติ
-        async function checkUserSession() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session && session.user) {
-                const user = session.user;
-                currentUser = {
-                    id: user.id,
-                    email: user.email,
-                    name: user.user_metadata?.display_name || user.email.split('@')[0]
-                };
-                document.getElementById('login-link-btn').classList.add('hidden');
-                const badge = document.getElementById('user-badge');
-                badge.classList.remove('hidden');
-                document.getElementById('user-name-label').innerText = `คุณ${currentUser.name}`;
-            }
+        // ==========================================
+        // 2. ระบบสลับหน้าเว็บ (Home / Flash Sale / Contact)
+        // ==========================================
+        function switchPage(pageName) {
+            document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`page-${pageName}`);
+            if (target) target.classList.remove('hidden');
+
+            ['home', 'promo', 'contact'].forEach(nav => {
+                const btn = document.getElementById(`nav-${nav}`);
+                if (!btn) return;
+                if (nav === pageName) {
+                    btn.className = 'nav-link text-primary font-semibold transition flex items-center';
+                } else {
+                    btn.className = 'nav-link text-gray-600 hover:text-primary transition font-medium flex items-center';
+                }
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // โหลดข้อมูลสินค้าตาม ID
-        async function loadProductDetail() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const productId = urlParams.get('id');
+        // ==========================================
+        // 3. ระบบโปรโมชั่นพิเศษ FLASH SALE (ลด 5% - 15%)
+        // ==========================================
+        function setupFlashSale() {
+            if (products.length === 0) return;
+            const discountRates = [5, 8, 10, 12, 15, 10];
+            
+            flashSaleProducts = products.slice(0, 6).map((item, idx) => {
+                const discountPercent = discountRates[idx % discountRates.length];
+                const salePrice = Math.round(item.price * (1 - discountPercent / 100));
+                
+                return {
+                    ...item,
+                    flashSaleId: `fs_${item.id}`,
+                    originalNormalPrice: item.price,
+                    salePrice: salePrice,
+                    discountPercent: discountPercent,
+                    soldPercent: 45 + ((idx * 13) % 45)
+                };
+            });
 
-            if (!productId) {
-                document.getElementById('loading-state').innerHTML = `<p class="text-red-500">ไม่พบรหัสสินค้า กรุณากลับไปเลือกสินค้าจากหน้าแรก</p>`;
+            renderFlashSale();
+        }
+
+        function renderFlashSale() {
+            const grid = document.getElementById('flash-sale-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            if (flashSaleProducts.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-12">ยังไม่มีรายการ Flash Sale ในขณะนี้</div>`;
                 return;
             }
 
-            try {
-                const { data: product, error } = await supabaseClient
-                    .from('products')
-                    .select('*')
-                    .eq('id', productId)
-                    .single();
+            flashSaleProducts.forEach(item => {
+                const cardHtml = `
+                    <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-amber-100 flex flex-col relative group">
+                        <div class="absolute top-3 left-3 bg-gradient-to-r from-red-600 to-orange-500 text-white text-xs font-extrabold px-3 py-1.5 rounded-full shadow-md z-10 flex items-center">
+                            <i class="fa-solid fa-bolt text-yellow-300 mr-1"></i> ลด ${item.discountPercent}%
+                        </div>
 
-                if (error || !product) throw new Error("ไม่พบข้อมูลสินค้านี้ในระบบ");
+                        <a href="product.html?id=${item.id}" class="relative overflow-hidden aspect-[4/3] bg-gray-100 block">
+                            <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500">
+                        </a>
 
-                currentProduct = product;
+                        <div class="p-5 flex flex-col flex-grow">
+                            <span class="text-xs text-orange-600 font-semibold mb-1">${item.category || 'สินค้าโปรโมชั่น'}</span>
+                            <a href="product.html?id=${item.id}" class="hover:text-primary transition">
+                                <h3 class="text-base font-bold text-gray-900 mb-2 line-clamp-2">${item.name}</h3>
+                            </a>
+                            
+                            <div class="mt-auto pt-2">
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-2xl font-extrabold text-red-600">${formatPrice(item.salePrice)}</span>
+                                    <span class="text-xs text-gray-400 line-through">${formatPrice(item.originalNormalPrice)}</span>
+                                </div>
+                                <p class="text-[11px] text-green-600 font-medium mt-0.5">ประหยัดทันที ${formatPrice(item.originalNormalPrice - item.salePrice)}</p>
 
-                document.title = `${product.name} - ElectroHub`;
-                document.getElementById('breadcrumb-category').innerText = product.category || 'สินค้า';
-                document.getElementById('breadcrumb-name').innerText = product.name;
+                                <div class="mt-3">
+                                    <div class="flex justify-between text-[11px] text-gray-500 mb-1">
+                                        <span>ขายไปแล้ว ${item.soldPercent}%</span>
+                                        <span class="text-red-500 font-semibold">ใกล้หมดแล้ว!</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                        <div class="bg-gradient-to-r from-red-500 to-amber-500 h-2 rounded-full" style="width: ${item.soldPercent}%"></div>
+                                    </div>
+                                </div>
 
-                document.getElementById('detail-image').src = product.image;
-                document.getElementById('detail-image').alt = product.name;
-                if (product.badge) {
-                    const badgeEl = document.getElementById('detail-badge');
-                    badgeEl.innerText = product.badge;
-                    badgeEl.classList.remove('hidden');
-                    if (product.badge.includes('ลดราคา')) badgeEl.classList.replace('bg-primary', 'bg-red-500');
-                }
-
-                document.getElementById('detail-category').innerText = product.category || 'ทั่วไป';
-                document.getElementById('detail-name').innerText = product.name;
-                document.getElementById('detail-price').innerText = formatPrice(product.price);
-
-                if (product.original_price) {
-                    const origEl = document.getElementById('detail-original-price');
-                    origEl.innerText = formatPrice(product.original_price);
-                    origEl.classList.remove('hidden');
-                }
-
-                const rating = product.rating || 5;
-                let starsHtml = '';
-                for (let i = 1; i <= 5; i++) {
-                    starsHtml += i <= Math.floor(rating) 
-                        ? `<i class="fa-solid fa-star text-xs mr-0.5"></i>` 
-                        : `<i class="fa-regular fa-star text-gray-300 text-xs mr-0.5"></i>`;
-                }
-                starsHtml += `<span class="text-gray-500 text-xs ml-2">(${product.reviews || 0} รีวิว)</span>`;
-                document.getElementById('detail-rating').innerHTML = starsHtml;
-
-                const stockEl = document.getElementById('detail-stock');
-                if (product.stock !== null && product.stock <= 0) {
-                    stockEl.className = 'font-medium text-red-500';
-                    stockEl.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> สินค้าหมดชั่วคราว`;
-                } else {
-                    stockEl.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> มีสินค้าพร้อมส่ง (${product.stock || 'พร้อมจัดส่ง'} ชิ้น)`;
-                }
-
-                document.getElementById('detail-description').innerText = product.description || 
-                    `สินค้าคุณภาพระดับพรีเมียม ${product.name} หมวดหมู่ ${product.category || 'อุปกรณ์อิเล็กทรอนิกส์'} รับประกันศูนย์ไทยแท้ 100% พร้อมบริการจัดส่งด่วนทั่วประเทศ`;
-
-                const specsContainer = document.getElementById('detail-specs-container');
-                if (product.specs) {
-                    const specItems = product.specs.split('|');
-                    specsContainer.innerHTML = specItems.map(item => {
-                        const parts = item.split(':');
-                        if (parts.length >= 2) {
-                            return `<div class="flex justify-between py-1.5 border-b border-gray-200/60 last:border-0">
-                                <span class="text-gray-500 font-medium">${parts[0].trim()}</span>
-                                <span class="text-gray-900 font-semibold text-right">${parts.slice(1).join(':').trim()}</span>
-                            </div>`;
-                        }
-                        return `<div class="py-1 text-gray-700">• ${item.trim()}</div>`;
-                    }).join('');
-                } else {
-                    specsContainer.innerHTML = `
-                        <div class="flex justify-between py-1.5 border-b border-gray-200/60"><span class="text-gray-500">หมวดหมู่</span><span class="text-gray-900 font-semibold">${product.category || '-'}</span></div>
-                        <div class="flex justify-between py-1.5 border-b border-gray-200/60"><span class="text-gray-500">การรับประกัน</span><span class="text-gray-900 font-semibold">รับประกันศูนย์ไทย 1 ปี</span></div>
-                        <div class="flex justify-between py-1.5"><span class="text-gray-500">การจัดส่ง</span><span class="text-green-600 font-semibold">จัดส่งฟรีทั่วประเทศ</span></div>
-                    `;
-                }
-
-                document.getElementById('loading-state').classList.add('hidden');
-                document.getElementById('product-detail-card').classList.remove('hidden');
-
-            } catch (err) {
-                document.getElementById('loading-state').innerHTML = `
-                    <i class="fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-3"></i>
-                    <p class="text-gray-700 font-medium mb-4">${err.message}</p>
-                    <a href="index.html" class="inline-block bg-primary text-white px-6 py-2 rounded-full text-sm">กลับหน้าหลัก</a>
+                                <div class="flex gap-2 mt-4">
+                                    <a href="product.html?id=${item.id}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-3 rounded-xl transition flex items-center justify-center text-xs">
+                                        รายละเอียด
+                                    </a>
+                                    <button onclick="addFlashSaleToCart(${item.id})" class="flex-1 bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white font-semibold py-2.5 px-3 rounded-xl shadow-sm transition flex items-center justify-center text-xs sm:text-sm">
+                                        <i class="fa-solid fa-cart-plus mr-1.5"></i> รับสิทธิ์ลดราคา
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 `;
-            }
+                grid.innerHTML += cardHtml;
+            });
         }
 
-        // เพิ่มสินค้าหน้านี้ลงตะกร้า (buyNow = true จะเปิดตะกร้าให้ทันที)
-        function addCurrentProductToCart(buyNow = false) {
-            if (!currentProduct) return;
+        function addFlashSaleToCart(productId) {
+            const fsItem = flashSaleProducts.find(p => p.id === productId);
+            if (!fsItem) return;
 
-            const existingItem = cart.find(item => item.product.id === currentProduct.id && item.product.price === currentProduct.price);
+            const promoProductObj = {
+                id: fsItem.id,
+                name: `[Flash Sale -${fsItem.discountPercent}%] ${fsItem.name}`,
+                category: fsItem.category,
+                price: fsItem.salePrice,
+                image: fsItem.image
+            };
+
+            const existingItem = cart.find(item => item.product.id === productId && item.product.price === fsItem.salePrice);
             if (existingItem) {
                 existingItem.quantity += 1;
             } else {
-                cart.push({ product: currentProduct, quantity: 1 });
+                cart.push({ product: promoProductObj, quantity: 1 });
             }
 
-            saveCartToStorage();
             updateCartUI();
-            showToast(`เพิ่ม <b>${currentProduct.name}</b> ลงในตะกร้าแล้ว`);
+            showToast(`เพิ่ม <b>${fsItem.name}</b> (ลด ${fsItem.discountPercent}%) ลงตะกร้าแล้ว!`, "success");
+        }
 
-            if (buyNow && !isCartOpen) {
-                toggleCart();
+        function startFlashSaleCountdown() {
+            let totalSeconds = (5 * 3600) + (42 * 60) + 19;
+            setInterval(() => {
+                if (totalSeconds <= 0) totalSeconds = 6 * 3600;
+                totalSeconds--;
+
+                const h = Math.floor(totalSeconds / 3600);
+                const m = Math.floor((totalSeconds % 3600) / 60);
+                const s = totalSeconds % 60;
+
+                const hEl = document.getElementById('fs-hours');
+                const mEl = document.getElementById('fs-minutes');
+                const sEl = document.getElementById('fs-seconds');
+
+                if (hEl) hEl.innerText = String(h).padStart(2, '0');
+                if (mEl) mEl.innerText = String(m).padStart(2, '0');
+                if (sEl) sEl.innerText = String(s).padStart(2, '0');
+            }, 1000);
+        }
+
+        // ==========================================
+        // 4. ระบบติดต่อเรา (Contact Us Form + แจ้งเตือน Discord)
+        // ==========================================
+        async function handleContactSubmit(event) {
+            event.preventDefault();
+            const btn = document.getElementById('contact-submit-btn');
+            if (btn.disabled) return;
+
+            const name = document.getElementById('contact-name').value.trim();
+            const email = document.getElementById('contact-email').value.trim();
+            const subject = document.getElementById('contact-subject').value;
+            const message = document.getElementById('contact-message').value.trim();
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังส่งข้อความ...';
+
+            try {
+                if (DISCORD_WEBHOOK_URL && DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
+                    const payload = {
+                        username: "ElectroHub Support Bot",
+                        avatar_url: "https://cdn-icons-png.flaticon.com/512/891/891462.png",
+                        embeds: [{
+                            title: `📩 มีข้อความติดต่อใหม่จากหน้าเว็บ!`,
+                            color: 0xf59e0b,
+                            fields: [
+                                { name: "👤 ชื่อผู้ติดต่อ", value: name, inline: true },
+                                { name: "📞 ช่องทางติดต่อกลับ", value: email, inline: true },
+                                { name: "📌 หัวข้อ", value: subject, inline: false },
+                                { name: "💬 รายละเอียดข้อความ", value: message, inline: false }
+                            ],
+                            footer: { text: "ElectroHub Customer Support System" },
+                            timestamp: new Date().toISOString()
+                        }]
+                    };
+
+                    await fetch(DISCORD_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                }
+
+                document.getElementById('contact-form').reset();
+                showToast("ส่งข้อความเรียบร้อยแล้ว! ทีมงานจะติดต่อกลับโดยเร็วที่สุด", "success");
+            } catch (err) {
+                showToast("ส่งข้อความเรียบร้อยแล้ว!", "success");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งข้อความติดต่อเรา';
             }
         }
 
-        // จัดการตะกร้าสินค้า
+        // ==========================================
+        // 5. ฟังก์ชันจัดการสินค้าและเมนูหมวดหมู่ (3 ขีด)
+        // ==========================================
+        function handleSearchInput() {
+            if (document.getElementById('page-home').classList.contains('hidden')) {
+                switchPage('home');
+            }
+            filterProducts();
+        }
+
+        function syncMobileSearch(val) {
+            const desktopSearch = document.getElementById('search-input');
+            if (desktopSearch) desktopSearch.value = val;
+            filterProducts();
+        }
+
+        function filterProducts() {
+            const searchTerm = (document.getElementById('search-input')?.value || '').toLowerCase();
+            const filtered = products.filter(p => {
+                const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
+                const matchesSearch = p.name.toLowerCase().includes(searchTerm) || (p.category && p.category.toLowerCase().includes(searchTerm));
+                return matchesCategory && matchesSearch;
+            });
+            renderProducts(filtered);
+        }
+
+        function toggleCategoryDrawer() {
+            const drawer = document.getElementById('category-drawer');
+            const backdrop = document.getElementById('category-backdrop');
+            const panel = document.getElementById('category-panel');
+
+            isCategoryOpen = !isCategoryOpen;
+
+            if (isCategoryOpen) {
+                drawer.classList.remove('invisible');
+                setTimeout(() => {
+                    backdrop.classList.remove('opacity-0');
+                    panel.classList.remove('-translate-x-full');
+                }, 10);
+            } else {
+                backdrop.classList.add('opacity-0');
+                panel.classList.add('-translate-x-full');
+                setTimeout(() => {
+                    drawer.classList.add('invisible');
+                }, 300);
+            }
+        }
+
+        function filterCategory(category) {
+            activeCategory = category;
+            switchPage('home');
+            
+            const labelEl = document.getElementById('current-category-label');
+            if (labelEl) {
+                labelEl.innerText = category === 'all' ? 'ทั้งหมด' : category;
+            }
+
+            renderCategoryButtons();
+            filterProducts();
+
+            if (isCategoryOpen) {
+                toggleCategoryDrawer();
+            }
+        }
+
+        function renderCategoryButtons() {
+            const categories = ['all', ...new Set(products.map(p => p.category).filter(Boolean))];
+            const container = document.getElementById('category-list-container');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                const isAll = cat === 'all';
+                const label = isAll ? 'ทั้งหมด' : cat;
+                const isActive = cat === activeCategory;
+                
+                const count = isAll ? products.length : products.filter(p => p.category === cat).length;
+
+                btn.onclick = () => filterCategory(cat);
+                btn.className = `w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition ${
+                    isActive 
+                    ? 'bg-primary text-white shadow-sm' 
+                    : 'text-gray-700 hover:bg-blue-50 hover:text-primary'
+                }`;
+                
+                btn.innerHTML = `
+                    <span class="flex items-center truncate pr-2">
+                        <i class="fa-solid ${isAll ? 'fa-border-all' : 'fa-tag'} mr-3 w-4 text-center ${isActive ? 'text-white' : 'text-gray-400'}"></i>
+                        <span class="truncate">${label}</span>
+                    </span>
+                    <span class="text-xs px-2.5 py-0.5 rounded-full flex-shrink-0 ${isActive ? 'bg-blue-700 text-white' : 'bg-gray-100 text-gray-500'}">${count}</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function renderProducts(productList = products) {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = '';
+            if (productList.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-12"><i class="fa-solid fa-box-open text-4xl mb-3 opacity-30"></i><p>ไม่พบสินค้าที่ค้นหา</p></div>`;
+                return;
+            }
+            productList.forEach(product => {
+                let starsHtml = '';
+                for(let i=1; i<=5; i++) {
+                    if(i <= Math.floor(product.rating)) starsHtml += `<i class="fa-solid fa-star text-yellow-400 text-xs"></i>`;
+                    else if(i === Math.ceil(product.rating) && !Number.isInteger(product.rating)) starsHtml += `<i class="fa-solid fa-star-half-stroke text-yellow-400 text-xs"></i>`;
+                    else starsHtml += `<i class="fa-regular fa-star text-gray-300 text-xs"></i>`;
+                }
+                let priceHtml = `<span class="text-xl font-bold text-gray-900">${formatPrice(product.price)}</span>`;
+                if(product.originalPrice) priceHtml += `<span class="text-sm text-gray-400 line-through ml-2">${formatPrice(product.originalPrice)}</span>`;
+                
+                let badgeHtml = '';
+                if(product.badge) {
+                    const badgeBg = product.badge.includes('ลดราคา') ? 'bg-red-500' : 'bg-primary';
+                    badgeHtml = `<div class="absolute top-3 left-3 ${badgeBg} text-white text-xs font-bold px-2 py-1 rounded shadow-sm z-10">${product.badge}</div>`;
+                }
+
+                const cardHtml = `
+                    <div class="bg-white rounded-xl shadow-sm hover:shadow-xl transition-shadow duration-300 overflow-hidden group flex flex-col">
+                        <div class="relative overflow-hidden aspect-[4/3] bg-gray-100">
+                            ${badgeHtml}
+                            <a href="product.html?id=${product.id}" class="block w-full h-full">
+                                <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500">
+                            </a>
+                            <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
+                                <button onclick="addToCart(${product.id})" class="pointer-events-auto bg-white text-gray-900 hover:bg-primary hover:text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300" title="เพิ่มลงตะกร้า"><i class="fa-solid fa-cart-plus"></i></button>
+                                <a href="product.html?id=${product.id}" class="pointer-events-auto bg-white text-gray-900 hover:bg-primary hover:text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300 delay-75" title="ดูรายละเอียดสินค้า"><i class="fa-regular fa-eye"></i></a>
+                            </div>
+                        </div>
+                        <div class="p-5 flex flex-col flex-grow">
+                            <span class="text-xs text-primary font-medium mb-1">${product.category || 'ทั่วไป'}</span>
+                            <a href="product.html?id=${product.id}" class="hover:text-primary transition">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-1 leading-tight">${product.name}</h3>
+                            </a>
+                            <div class="flex items-center mb-3">${starsHtml}<span class="text-xs text-gray-500 ml-2">(${product.reviews})</span></div>
+                            <div class="mt-auto flex items-center justify-between pt-2">
+                                <div class="flex items-baseline flex-wrap">${priceHtml}</div>
+                                <div class="flex items-center gap-1.5">
+                                    <a href="product.html?id=${product.id}" class="text-xs font-medium text-gray-600 hover:text-primary bg-gray-100 hover:bg-blue-50 px-3 py-2 rounded-full transition">รายละเอียด</a>
+                                    <button onclick="addToCart(${product.id})" class="w-9 h-9 rounded-full bg-primary hover:bg-blue-700 text-white flex items-center justify-center transition-colors flex-shrink-0"><i class="fa-solid fa-plus text-xs"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += cardHtml;
+            });
+        }
+
+        // ==========================================
+        // 6. ฟังก์ชันระบบผู้ใช้ (Auth)
+        // ==========================================
+        function openAuthModal(tab = 'login') {
+            switchAuthTab(tab);
+            document.getElementById('auth-modal').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+            resetAuthForms();
+        }
+
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('form-login');
+            const regForm = document.getElementById('form-register');
+            const otpForm = document.getElementById('form-otp');
+            const tabLogin = document.getElementById('tab-login');
+            const tabReg = document.getElementById('tab-register');
+
+            if (otpForm) otpForm.classList.add('hidden');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+                tabLogin.className = 'flex-1 py-4 font-bold text-center border-b-2 border-primary text-primary transition';
+                tabReg.className = 'flex-1 py-4 font-bold text-center border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition';
+            } else {
+                loginForm.classList.add('hidden');
+                regForm.classList.remove('hidden');
+                tabReg.className = 'flex-1 py-4 font-bold text-center border-b-2 border-primary text-primary transition';
+                tabLogin.className = 'flex-1 py-4 font-bold text-center border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition';
+            }
+        }
+
+        function resetAuthForms() {
+            document.getElementById('form-register').reset();
+            document.getElementById('form-login').reset();
+            document.getElementById('form-otp').reset();
+            document.getElementById('form-otp').classList.add('hidden');
+            pendingEmailForOTP = '';
+        }
+
+        function cancelOTP() {
+            resetAuthForms();
+            switchAuthTab('register');
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            const btn = document.getElementById('reg-submit-btn');
+            if (btn.disabled) return;
+
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-confirm-password').value;
+
+            if (password !== confirmPassword) {
+                showToast("รหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง", "error");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังส่งรหัส...';
+
+            try {
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: { data: { display_name: name } }
+                });
+
+                if (error) throw error;
+
+                pendingEmailForOTP = email;
+                showToast("ส่งรหัสยืนยันตัวตนไปยังอีเมลของคุณแล้ว!", "success");
+                document.getElementById('form-register').classList.add('hidden');
+                document.getElementById('form-otp').classList.remove('hidden');
+
+            } catch (err) {
+                showToast("สมัครสมาชิกไม่สำเร็จ: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'สมัครสมาชิก';
+            }
+        }
+
+        async function handleVerifyOTP(event) {
+            event.preventDefault();
+            const btn = document.getElementById('otp-submit-btn');
+            if (btn.disabled) return;
+
+            const token = document.getElementById('otp-code').value.trim();
+
+            if (!token) {
+                showToast("กรุณากรอกรหัสจากอีเมล", "error");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังตรวจสอบรหัส...';
+
+            try {
+                const { data, error } = await supabaseClient.auth.verifyOtp({
+                    email: pendingEmailForOTP,
+                    token: token,
+                    type: 'signup'
+                });
+
+                if (error) throw error;
+
+                showToast("ยืนยันอีเมลสำเร็จ! เข้าสู่ระบบเรียบร้อยแล้ว", "success");
+                checkUserSession();
+                closeAuthModal();
+
+            } catch (err) {
+                showToast("รหัสไม่ถูกต้องหรือหมดอายุ: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'ยืนยันรหัส OTP';
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const btn = document.getElementById('login-submit-btn');
+            if (btn.disabled) return;
+
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังเข้าสู่ระบบ...';
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                const user = data.user;
+                currentUser = {
+                    id: user.id,
+                    email: user.email,
+                    name: user.user_metadata?.display_name || email.split('@')[0]
+                };
+                updateAuthUI();
+                closeAuthModal();
+                resetAuthForms();
+                showToast(`ยินดีต้อนรับกลับ, คุณ${currentUser.name}!`, "success");
+            } catch (err) {
+                showToast("อีเมลหรือรหัสผ่านไม่ถูกต้อง", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'เข้าสู่ระบบ';
+            }
+        }
+
+        async function logout() {
+            try {
+                await supabaseClient.auth.signOut();
+                currentUser = null;
+                updateAuthUI();
+                toggleUserDropdown();
+                showToast("ออกจากระบบเรียบร้อยแล้ว");
+            } catch (err) {
+                showToast("เกิดข้อผิดพลาดในการออกจากระบบ", "error");
+            }
+        }
+
+        async function checkUserSession() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    const user = session.user;
+                    currentUser = {
+                        id: user.id,
+                        email: user.email,
+                        name: user.user_metadata?.display_name || user.email.split('@')[0]
+                    };
+                    updateAuthUI();
+                }
+            } catch (err) {
+                console.error("Session check error:", err);
+            }
+        }
+
+        function updateAuthUI() {
+            const loginBtn = document.getElementById('login-btn');
+            const userMenu = document.getElementById('user-menu');
+            const userDisplayName = document.getElementById('user-display-name');
+            const userAvatar = document.getElementById('user-avatar');
+
+            if (currentUser) {
+                loginBtn.classList.add('hidden');
+                userMenu.classList.remove('hidden');
+                userDisplayName.innerText = `คุณ${currentUser.name}`;
+                userAvatar.innerText = currentUser.name.charAt(0).toUpperCase();
+            } else {
+                loginBtn.classList.remove('hidden');
+                userMenu.classList.add('hidden');
+            }
+        }
+
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // ==========================================
+        // 7. ฟังก์ชันตะกร้าสินค้า (Cart)
+        // ==========================================
         function toggleCart() {
             const sidebar = document.getElementById('cart-sidebar');
             const backdrop = document.getElementById('cart-backdrop');
@@ -397,9 +1228,23 @@
             }
         }
 
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            const existingItem = cart.find(item => item.product.id === productId && item.product.price === product.price);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ product: product, quantity: 1 });
+            }
+            
+            updateCartUI();
+            showToast(`เพิ่ม <b>${product.name}</b> ลงในตะกร้าแล้ว`);
+        }
+
         function removeFromCart(index) {
             cart.splice(index, 1);
-            saveCartToStorage();
             updateCartUI();
         }
 
@@ -410,7 +1255,6 @@
                 if (item.quantity <= 0) {
                     removeFromCart(index);
                 } else {
-                    saveCartToStorage();
                     updateCartUI();
                 }
             }
@@ -427,18 +1271,22 @@
             
             if (cart.length === 0) {
                 emptyMsg.style.display = 'flex';
-                container.querySelectorAll('.cart-item').forEach(item => item.remove());
+                const items = container.querySelectorAll('.cart-item');
+                items.forEach(item => item.remove());
                 cartTotal.innerText = '฿0';
                 return;
             } else {
                 emptyMsg.style.display = 'none';
             }
 
-            container.querySelectorAll('.cart-item').forEach(item => item.remove());
+            const existingItems = container.querySelectorAll('.cart-item');
+            existingItems.forEach(item => item.remove());
+
             let totalPrice = 0;
 
             cart.forEach((item, index) => {
                 totalPrice += item.product.price * item.quantity;
+                
                 const itemEl = document.createElement('div');
                 itemEl.className = 'cart-item flex items-center gap-4 bg-white p-3 border rounded-xl shadow-sm';
                 itemEl.innerHTML = `
@@ -446,6 +1294,7 @@
                     <div class="flex-1 min-w-0">
                         <h4 class="text-sm font-semibold text-gray-900 truncate">${item.product.name}</h4>
                         <div class="text-primary font-medium text-sm mt-1">${formatPrice(item.product.price)}</div>
+                        
                         <div class="flex items-center mt-2 border rounded-lg w-fit">
                             <button onclick="updateQuantity(${index}, -1)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg transition"><i class="fa-solid fa-minus text-xs"></i></button>
                             <span class="px-3 text-sm font-medium w-8 text-center">${item.quantity}</span>
@@ -462,7 +1311,9 @@
             cartTotal.innerText = formatPrice(totalPrice);
         }
 
-        // ระบบชำระเงิน PromptPay QR + บันทึกลง Supabase
+        // ==========================================
+        // 8. ระบบชำระเงินและแจ้งเตือน (Checkout & Payment)
+        // ==========================================
         function checkout() {
             if (cart.length === 0) {
                 showToast("ตะกร้าสินค้าว่างเปล่า กรุณาเลือกสินค้าก่อน", "error");
@@ -470,14 +1321,14 @@
             }
 
             if (!currentUser) {
-                showToast("กรุณาเข้าสู่ระบบที่หน้าแรกก่อนทำการสั่งซื้อสินค้า", "error");
-                setTimeout(() => { window.location.href = "index.html"; }, 1500);
+                showToast("กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อสินค้า", "error");
+                openAuthModal('login');
                 return;
             }
 
             const totalPrice = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-            const qrUrl = `https://promptpay.io/${PROMPTPAY_NUMBER}/${totalPrice}.png`;
             
+            const qrUrl = `https://promptpay.io/${PROMPTPAY_NUMBER}/${totalPrice}.png`;
             document.getElementById('promptpay-qr-img').src = qrUrl;
             document.getElementById('promptpay-num-display').innerText = `พร้อมเพย์: ${PROMPTPAY_NUMBER}`;
             document.getElementById('payment-amount-display').innerText = formatPrice(totalPrice);
@@ -504,6 +1355,7 @@
 
         async function submitPaymentWithSlip() {
             if (!currentPendingOrder) return;
+
             const btn = document.getElementById('confirm-payment-btn');
             if (btn.disabled) return;
 
@@ -513,79 +1365,234 @@
             try {
                 const { data: orderData, error: orderError } = await supabaseClient
                     .from('orders')
-                    .insert([{
-                        user_id: currentUser.id,
-                        user_email: currentUser.email,
-                        total_amount: currentPendingOrder.totalPrice,
-                        items: currentPendingOrder.items,
-                        status: 'ชำระเงินแล้ว',
-                        payment_method: 'PromptPay QR',
-                        slip_url: null
-                    }])
+                    .insert([
+                        {
+                            user_id: currentUser.id,
+                            user_email: currentUser.email,
+                            total_amount: currentPendingOrder.totalPrice,
+                            items: currentPendingOrder.items,
+                            status: 'ชำระเงินแล้ว',
+                            payment_method: 'PromptPay QR',
+                            slip_url: null
+                        }
+                    ])
                     .select();
 
                 if (orderError) throw orderError;
 
                 const newOrderId = orderData[0]?.id || 'N/A';
 
-                if (DISCORD_WEBHOOK_URL && DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
-                    const itemListStr = currentPendingOrder.items.map(i => `• **${i.name}** (x${i.quantity}) - ฿${(i.price * i.quantity).toLocaleString()}`).join('\n');
-                    await fetch(DISCORD_WEBHOOK_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            username: "ElectroHub Bot",
-                            embeds: [{
-                                title: `🛒 มีคำสั่งซื้อใหม่เข้ามา! (ออเดอร์ #${newOrderId})`,
-                                color: 0x2563eb,
-                                fields: [
-                                    { name: "👤 ผู้สั่งซื้อ", value: currentUser.email, inline: true },
-                                    { name: "💰 ยอดรวมสุทธิ", value: `**฿${currentPendingOrder.totalPrice.toLocaleString()}**`, inline: true },
-                                    { name: "📦 รายการสินค้า", value: itemListStr, inline: false }
-                                ],
-                                timestamp: new Date().toISOString()
-                            }]
-                        })
-                    });
-                }
+                await sendDiscordNotification(newOrderId, currentUser.email, currentPendingOrder.totalPrice, currentPendingOrder.items);
 
                 cart = [];
-                saveCartToStorage();
                 updateCartUI();
                 closePaymentModal();
                 currentPendingOrder = null;
 
                 showToast("ชำระเงินและบันทึกคำสั่งซื้อเรียบร้อยแล้ว!", "success");
+
             } catch (err) {
-                showToast("เกิดข้อผิดพลาด: " + err.message, "error");
+                console.error("Order submission error:", err);
+                showToast("เกิดข้อผิดพลาดในการบันทึกออเดอร์: " + err.message, "error");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการชำระเงิน';
             }
         }
 
+        async function sendDiscordNotification(orderId, userEmail, totalAmount, items) {
+            if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL === "YOUR_DISCORD_WEBHOOK_URL_HERE") return;
+
+            const itemListStr = items.map(i => `• **${i.name}** (x${i.quantity}) - ฿${(i.price * i.quantity).toLocaleString()}`).join('\n');
+
+            const discordPayload = {
+                username: "ElectroHub Bot",
+                avatar_url: "https://cdn-icons-png.flaticon.com/512/891/891462.png",
+                embeds: [
+                    {
+                        title: `🛒 มีคำสั่งซื้อใหม่เข้ามา! (ออเดอร์ #${orderId})`,
+                        color: 0x2563eb,
+                        fields: [
+                            { name: "👤 ผู้สั่งซื้อ", value: userEmail, inline: true },
+                            { name: "💳 ช่องทางชำระเงิน", value: "PromptPay QR Code", inline: true },
+                            { name: "💰 ยอดรวมสุทธิ", value: `**฿${totalAmount.toLocaleString()}**`, inline: false },
+                            { name: "📦 รายการสินค้า", value: itemListStr || "ไม่มีข้อมูล", inline: false }
+                        ],
+                        footer: { text: "ElectroHub E-Commerce Notification System" },
+                        timestamp: new Date().toISOString()
+                    }
+                ]
+            };
+
+            try {
+                await fetch(DISCORD_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(discordPayload)
+                });
+            } catch (err) {
+                console.error("Discord Notification error:", err);
+            }
+        }
+
+        // ==========================================
+        // 9. ฟังก์ชันประวัติการสั่งซื้อ (Order History)
+        // ==========================================
+        function openOrdersModal() {
+            if (!currentUser) {
+                showToast("กรุณาเข้าสู่ระบบก่อนดูประวัติการสั่งซื้อ", "error");
+                openAuthModal('login');
+                return;
+            }
+            if (!document.getElementById('user-dropdown').classList.contains('hidden')) {
+                toggleUserDropdown();
+            }
+            document.getElementById('orders-modal').classList.remove('hidden');
+            fetchUserOrders();
+        }
+
+        function closeOrdersModal() {
+            document.getElementById('orders-modal').classList.add('hidden');
+        }
+
+        async function fetchUserOrders() {
+            const container = document.getElementById('orders-list-container');
+            container.innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-primary mb-2"></i>
+                    <p>กำลังโหลดประวัติการสั่งซื้อ...</p>
+                </div>
+            `;
+
+            try {
+                const { data: orders, error } = await supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!orders || orders.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-12">
+                            <i class="fa-solid fa-receipt text-5xl mb-3 opacity-20"></i>
+                            <p class="font-medium">คุณยังไม่มีประวัติการสั่งซื้อสินค้า</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '';
+                orders.forEach(order => {
+                    const dateStr = new Date(order.created_at).toLocaleDateString('th-TH', {
+                        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    });
+
+                    let itemsHtml = '';
+                    order.items.forEach(item => {
+                        itemsHtml += `
+                            <div class="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                                <img src="${item.image}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg bg-gray-100">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-gray-800 truncate">${item.name}</p>
+                                    <p class="text-xs text-gray-500">${formatPrice(item.price)} x ${item.quantity}</p>
+                                </div>
+                                <span class="text-sm font-bold text-gray-700">${formatPrice(item.price * item.quantity)}</span>
+                            </div>
+                        `;
+                    });
+
+                    const orderCard = `
+                        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+                            <div class="flex flex-wrap justify-between items-center pb-3 mb-3 border-b border-gray-100 gap-2">
+                                <div>
+                                    <span class="text-xs font-bold text-gray-400">คำสั่งซื้อ #${order.id}</span>
+                                    <div class="text-xs text-gray-500"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</div>
+                                </div>
+                                <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">
+                                    <i class="fa-solid fa-circle-check mr-1"></i>${order.status || 'ชำระเงินแล้ว'}
+                                </span>
+                            </div>
+                            <div class="space-y-1 mb-3">
+                                ${itemsHtml}
+                            </div>
+                            <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                                <span class="text-sm font-medium text-gray-600">ราคารวมสุทธิ</span>
+                                <span class="text-lg font-bold text-primary">${formatPrice(order.total_amount)}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += orderCard;
+                });
+
+            } catch (err) {
+                console.error("Fetch orders error:", err);
+                container.innerHTML = `<div class="text-center text-red-500 py-6">เกิดข้อผิดพลาดในการดึงข้อมูล: ${err.message}</div>`;
+            }
+        }
+
+        // ==========================================
+        // 10. ฟังก์ชันอื่นๆ และการเริ่มต้นทำงาน
+        // ==========================================
         function showToast(message, type = "success") {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast-enter flex items-center p-4 mb-2 text-gray-900 bg-white rounded-lg shadow-xl border-l-4 w-full sm:min-w-[300px] sm:w-auto`;
+            
             if(type === "success") {
                 toast.classList.add('border-green-500');
                 toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg mr-3"><i class="fa-solid fa-check"></i></div><div class="text-sm font-medium">${message}</div>`;
-            } else {
+            } else if (type === "error") {
                 toast.classList.add('border-red-500');
                 toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg mr-3"><i class="fa-solid fa-exclamation"></i></div><div class="text-sm font-medium">${message}</div>`;
             }
+            
             container.appendChild(toast);
+
             setTimeout(() => {
                 toast.classList.replace('toast-enter', 'toast-exit');
                 setTimeout(() => { toast.remove(); }, 300);
             }, 3000);
         }
 
+        async function fetchProductsFromSupabase() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('*')
+                    .order('id', { ascending: true });
+
+                if (error) throw error;
+
+                products = data.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    category: item.category,
+                    price: item.price,
+                    originalPrice: item.original_price,
+                    rating: item.rating || 5.0,
+                    reviews: item.reviews || 0,
+                    image: item.image,
+                    badge: item.badge,
+                    stock: item.stock || 0
+                }));
+
+                renderProducts();
+                renderCategoryButtons();
+                setupFlashSale();
+
+            } catch (err) {
+                showToast("ไม่สามารถโหลดรายการสินค้าได้: " + err.message, "error");
+            }
+        }
+
+        // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
-            loadProductDetail();
+            fetchProductsFromSupabase();
             updateCartUI();
             checkUserSession();
+            startFlashSaleCountdown();
         });
     </script>
 </body>
