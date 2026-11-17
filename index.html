@@ -235,10 +235,6 @@
         let cart = JSON.parse(localStorage.getItem('electrohub_cart')) || [];
         const saveCartToStorage = () => localStorage.setItem('electrohub_cart', JSON.stringify(cart));
 
-        const saveCartToStorage = () => {
-            localStorage.setItem('electrohub_cart', JSON.stringify(cart));
-        };
-
         const formatPrice = (price) => {
             return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(price);
         };
