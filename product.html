@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายละเอียดสินค้า - ElectroHub</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Kanit -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Kanit', 'Inter', 'sans-serif'] },
+                    colors: { primary: '#2563eb', secondary: '#1e293b' }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans flex flex-col min-h-screen overflow-x-hidden w-full">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm sticky top-0 z-40 w-full">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo กลับหน้าแรก -->
+                <a href="index.html" class="flex-shrink-0 flex items-center cursor-pointer">
+                    <i class="fa-solid fa-microchip text-primary text-2xl mr-2"></i>
+                    <span class="font-bold text-xl sm:text-2xl tracking-tight text-secondary">Electro<span class="text-primary">Hub</span></span>
+                </a>
+                
+                <!-- ปุ่มย้อนกลับ -->
+                <a href="index.html" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-full text-sm transition flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> กลับหน้าร้านค้า
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <!-- Breadcrumb -->
+        <nav class="text-xs sm:text-sm text-gray-500 mb-6 flex items-center space-x-2">
+            <a href="index.html" class="hover:text-primary">หน้าแรก</a>
+            <span>/</span>
+            <span id="breadcrumb-category" class="text-gray-700">หมวดหมู่</span>
+            <span>/</span>
+            <span id="breadcrumb-name" class="text-primary font-medium truncate">กำลังโหลด...</span>
+        </nav>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
+            <i class="fa-solid fa-circle-notch fa-spin text-4xl text-primary mb-3"></i>
+            <p class="text-gray-500">กำลังโหลดข้อมูลรายละเอียดสินค้า...</p>
+        </div>
+
+        <!-- Product Detail Container (ซ่อนไว้จนกว่าจะโหลดเสร็จ) -->
+        <div id="product-detail-card" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 sm:p-10">
+                <!-- รูปภาพสินค้า -->
+                <div class="relative bg-gray-100 rounded-2xl overflow-hidden aspect-[4/3] flex items-center justify-center border border-gray-100">
+                    <div id="detail-badge" class="hidden absolute top-4 left-4 bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm z-10"></div>
+                    <img id="detail-image" src="" alt="Product Image" class="w-full h-full object-cover object-center">
+                </div>
+
+                <!-- ข้อมูลและรายละเอียดสินค้า -->
+                <div class="flex flex-col">
+                    <span id="detail-category" class="inline-block w-fit bg-blue-50 text-primary text-xs font-semibold px-3 py-1 rounded-full mb-2"></span>
+                    <h1 id="detail-name" class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 leading-snug"></h1>
+                    
+                    <!-- คะแนนรีวิว & สต็อก -->
+                    <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-4 pb-4 border-b border-gray-100">
+                        <div id="detail-rating" class="flex items-center text-yellow-400"></div>
+                        <span>|</span>
+                        <div id="detail-stock" class="font-medium text-green-600">
+                            <i class="fa-solid fa-circle-check mr-1"></i> มีสินค้าพร้อมส่ง
+                        </div>
+                    </div>
+
+                    <!-- ราคา -->
+                    <div class="bg-gray-50 p-4 rounded-xl mb-6">
+                        <span class="text-xs text-gray-500 block mb-1">ราคาพิเศษ</span>
+                        <div class="flex items-baseline gap-3">
+                            <span id="detail-price" class="text-3xl font-extrabold text-primary"></span>
+                            <span id="detail-original-price" class="text-base text-gray-400 line-through hidden"></span>
+                        </div>
+                    </div>
+
+                    <!-- คำอธิบายสินค้า -->
+                    <div class="mb-6">
+                        <h3 class="text-sm font-bold text-gray-900 mb-2">รายละเอียดสินค้า</h3>
+                        <p id="detail-description" class="text-sm text-gray-600 leading-relaxed whitespace-pre-line"></p>
+                    </div>
+
+                    <!-- ตารางสเปกสินค้า -->
+                    <div class="mb-8">
+                        <h3 class="text-sm font-bold text-gray-900 mb-2">ข้อมูลจำเพาะ / สเปก (Specifications)</h3>
+                        <div id="detail-specs-container" class="bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm space-y-2">
+                            <!-- รายการสเปกจะถูกแสดงที่นี่ -->
+                        </div>
+                    </div>
+
+                    <!-- ปุ่มดำเนินการ -->
+                    <div class="mt-auto flex flex-col sm:flex-row gap-3">
+                        <a href="index.html#products" class="flex-1 bg-primary hover:bg-blue-700 text-white font-medium py-3.5 px-6 rounded-xl shadow-md transition flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-cart-shopping mr-2"></i> ไปเลือกซื้อสินค้าที่หน้าร้าน
+                        </a>
+                        <a href="index.html" class="sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3.5 px-6 rounded-xl transition flex items-center justify-center text-sm">
+                            ดูสินค้าอื่น
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-8 mt-auto text-center text-sm">
+        <p>&copy; 2024 ElectroHub. สงวนลิขสิทธิ์.</p>
+    </footer>
+
+    <script>
+        // เชื่อมต่อ Supabase (ใช้ค่าเดียวกับ index.html)
+        const SUPABASE_URL = 'https://zlpxxwauxgwsvvukfqmx.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'sb_publishable_mTmE2KIwTN0vsM7nDlePTg_rHJwCaNn';                 
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const formatPrice = (price) => {
+            return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(price);
+        };
+
+        async function loadProductDetail() {
+            // อ่านค่า ?id=... จาก URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+
+            if (!productId) {
+                document.getElementById('loading-state').innerHTML = `<p class="text-red-500">ไม่พบรหัสสินค้า กรุณากลับไปเลือกสินค้าจากหน้าแรก</p>`;
+                return;
+            }
+
+            try {
+                const { data: product, error } = await supabaseClient
+                    .from('products')
+                    .select('*')
+                    .eq('id', productId)
+                    .single();
+
+                if (error || !product) throw new Error("ไม่พบข้อมูลสินค้านี้ในระบบ");
+
+                // อัปเดต Title และ Breadcrumb
+                document.title = `${product.name} - ElectroHub`;
+                document.getElementById('breadcrumb-category').innerText = product.category || 'สินค้า';
+                document.getElementById('breadcrumb-name').innerText = product.name;
+
+                // รูปภาพและป้ายกำกับ
+                document.getElementById('detail-image').src = product.image;
+                document.getElementById('detail-image').alt = product.name;
+                if (product.badge) {
+                    const badgeEl = document.getElementById('detail-badge');
+                    badgeEl.innerText = product.badge;
+                    badgeEl.classList.remove('hidden');
+                    if (product.badge.includes('ลดราคา')) badgeEl.classList.replace('bg-primary', 'bg-red-500');
+                }
+
+                // ข้อมูลหลัก
+                document.getElementById('detail-category').innerText = product.category || 'ทั่วไป';
+                document.getElementById('detail-name').innerText = product.name;
+                document.getElementById('detail-price').innerText = formatPrice(product.price);
+
+                if (product.original_price) {
+                    const origEl = document.getElementById('detail-original-price');
+                    origEl.innerText = formatPrice(product.original_price);
+                    origEl.classList.remove('hidden');
+                }
+
+                // ดาวและรีวิว
+                const rating = product.rating || 5;
+                let starsHtml = '';
+                for (let i = 1; i <= 5; i++) {
+                    starsHtml += i <= Math.floor(rating) 
+                        ? `<i class="fa-solid fa-star text-xs mr-0.5"></i>` 
+                        : `<i class="fa-regular fa-star text-gray-300 text-xs mr-0.5"></i>`;
+                }
+                starsHtml += `<span class="text-gray-500 text-xs ml-2">(${product.reviews || 0} รีวิว)</span>`;
+                document.getElementById('detail-rating').innerHTML = starsHtml;
+
+                // สต็อกสินค้า
+                const stockEl = document.getElementById('detail-stock');
+                if (product.stock !== null && product.stock <= 0) {
+                    stockEl.className = 'font-medium text-red-500';
+                    stockEl.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> สินค้าหมดชั่วคราว`;
+                } else {
+                    stockEl.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> มีสินค้าพร้อมส่ง (${product.stock || 'พร้อมจัดส่ง'} ชิ้น)`;
+                }
+
+                // คำอธิบายสินค้า (ถ้ายังไม่ได้กรอกใน Supabase จะแสดงข้อความมาตรฐานให้)
+                document.getElementById('detail-description').innerText = product.description || 
+                    `สินค้าคุณภาพระดับพรีเมียม ${product.name} หมวดหมู่ ${product.category || 'อุปกรณ์อิเล็กทรอนิกส์'} รับประกันศูนย์ไทยแท้ 100% พร้อมบริการจัดส่งด่วนทั่วประเทศ`;
+
+                // สเปกสินค้า (รองรับการคั่นด้วยเครื่องหมาย | เช่น "CPU: M3 | RAM: 16GB | ความจุ: 512GB")
+                const specsContainer = document.getElementById('detail-specs-container');
+                if (product.specs) {
+                    const specItems = product.specs.split('|');
+                    specsContainer.innerHTML = specItems.map(item => {
+                        const parts = item.split(':');
+                        if (parts.length >= 2) {
+                            return `<div class="flex justify-between py-1.5 border-b border-gray-200/60 last:border-0">
+                                <span class="text-gray-500 font-medium">${parts[0].trim()}</span>
+                                <span class="text-gray-900 font-semibold text-right">${parts.slice(1).join(':').trim()}</span>
+                            </div>`;
+                        }
+                        return `<div class="py-1 text-gray-700">• ${item.trim()}</div>`;
+                    }).join('');
+                } else {
+                    specsContainer.innerHTML = `
+                        <div class="flex justify-between py-1.5 border-b border-gray-200/60"><span class="text-gray-500">หมวดหมู่</span><span class="text-gray-900 font-semibold">${product.category || '-'}</span></div>
+                        <div class="flex justify-between py-1.5 border-b border-gray-200/60"><span class="text-gray-500">การรับประกัน</span><span class="text-gray-900 font-semibold">รับประกันศูนย์ไทย 1 ปี</span></div>
+                        <div class="flex justify-between py-1.5"><span class="text-gray-500">การจัดส่ง</span><span class="text-green-600 font-semibold">จัดส่งฟรีทั่วประเทศ</span></div>
+                    `;
+                }
+
+                // แสดงการ์ดรายละเอียดสินค้า
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('product-detail-card').classList.remove('hidden');
+
+            } catch (err) {
+                document.getElementById('loading-state').innerHTML = `
+                    <i class="fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-3"></i>
+                    <p class="text-gray-700 font-medium mb-4">${err.message}</p>
+                    <a href="index.html" class="inline-block bg-primary text-white px-6 py-2 rounded-full text-sm">กลับหน้าหลัก</a>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadProductDetail);
+    </script>
+</body>
+</html>
