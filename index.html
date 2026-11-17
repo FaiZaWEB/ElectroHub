@@ -21,21 +21,19 @@
                         sans: ['Kanit', 'Inter', 'sans-serif'],
                     },
                     colors: {
-                        primary: '#2563eb', // Blue 600
-                        secondary: '#1e293b', // Slate 800
+                        primary: '#2563eb',
+                        secondary: '#1e293b',
                     }
                 }
             }
         }
     </script>
     <style>
-        /* Custom Scrollbar */
         .cart-scroll::-webkit-scrollbar { width: 6px; }
         .cart-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
         .cart-scroll::-webkit-scrollbar-thumb { background: #b8b8b8; border-radius: 10px; }
         .cart-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Toast Animation */
         @keyframes slideInUp {
             from { transform: translateY(100%) scale(0.95); opacity: 0; }
             to { transform: translateY(0) scale(1); opacity: 1; }
@@ -47,7 +45,6 @@
         .toast-enter { animation: slideInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .toast-exit { animation: fadeOut 0.25s ease-out forwards; }
 
-        /* Hero Text Fade In Up */
         @keyframes heroFadeUp {
             from { opacity: 0; transform: translateY(24px); }
             to { opacity: 1; transform: translateY(0); }
@@ -56,7 +53,6 @@
         .animate-hero-2 { animation: heroFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
         .animate-hero-3 { animation: heroFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
 
-        /* Scroll Reveal สำหรับการ์ดสินค้า */
         .reveal-card {
             opacity: 0;
             transform: translateY(25px);
@@ -71,7 +67,6 @@
             box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.1), 0 8px 10px -6px rgba(37, 99, 235, 0.08);
         }
 
-        /* Cart Bounce เมื่อกดเพิ่มสินค้า */
         @keyframes cartBounce {
             0%, 100% { transform: scale(1); }
             35% { transform: scale(1.3) rotate(-8deg); }
@@ -81,7 +76,6 @@
             animation: cartBounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        /* Shimmer Glow บนปุ่ม Flash Sale */
         @keyframes pulseGlow {
             0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); }
             50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
@@ -93,7 +87,7 @@
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans flex flex-col min-h-screen overflow-x-hidden w-full selection:bg-primary selection:text-white">
 
-    <!-- Navbar (แบบกระจกฝ้าโปร่งแสง Glassmorphism) -->
+    <!-- Navbar -->
     <nav class="bg-white/85 backdrop-blur-md shadow-sm border-b border-gray-100/80 sticky top-0 z-40 w-full transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
@@ -137,7 +131,7 @@
                                 <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
                             </button>
 
-                           <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 hidden border border-gray-100 origin-top-right transition-all">
+                            <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 hidden border border-gray-100 origin-top-right transition-all">
                                 <a href="./admin.html" class="block px-4 py-2 text-sm text-amber-600 font-semibold hover:bg-amber-50 transition flex items-center"><i class="fa-solid fa-shield-halved mr-2"></i> จัดการหลังบ้าน (Admin)</a>
                                 <a href="#" onclick="openOrdersModal()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary transition flex items-center"><i class="fa-solid fa-box mr-2 text-gray-400"></i> ประวัติการสั่งซื้อ</a>
                                 <hr class="my-1 border-gray-100">
@@ -233,32 +227,32 @@
             <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
                 <div class="animate-hero-1">
                     <div class="inline-flex items-center bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase mb-3">
-                        <i class="fa-solid fa-fire text-yellow-300 mr-1.5"></i> ดีลเดือดจำนวนจำกัด
+                        <i class="fa-solid fa-fire text-yellow-300 mr-1.5"></i> ดีลเดือดจำนวนจำกัด • เปลี่ยนรอบใหม่ทุก 1 ชั่วโมง
                     </div>
                     <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight flex items-center">
                         <i class="fa-solid fa-bolt text-yellow-300 mr-3 animate-bounce"></i> FLASH SALE
                     </h1>
                     <p class="text-white/90 text-base sm:text-lg mt-2">
-                        คัดสินค้าตัวท็อปในร้านมาลดราคาพิเศษทันที <span class="font-bold underline decoration-yellow-300">5% - 15%</span> หมดแล้วหมดเลย!
+                        สุ่มหยิบสินค้าราคาปกติมาลดพิเศษทันที <span class="font-bold underline decoration-yellow-300">5% - 15%</span> จากราคาเต็ม!
                     </p>
                 </div>
 
-                <!-- Countdown Timer -->
+                <!-- Countdown Timer (นับถอยหลังจนถึงต้นชั่วโมงถัดไป) -->
                 <div class="animate-hero-2 bg-slate-900/80 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/10 text-center shadow-xl">
                     <p class="text-xs text-gray-300 mb-2 font-medium">สิ้นสุดโปรโมชั่นรอบนี้ในอีก</p>
                     <div class="flex items-center space-x-2 sm:space-x-3 text-white font-mono">
                         <div class="bg-red-600 px-3 py-2 rounded-xl min-w-[56px] shadow">
-                            <span id="fs-hours" class="text-2xl sm:text-3xl font-bold block">05</span>
+                            <span id="fs-hours" class="text-2xl sm:text-3xl font-bold block">00</span>
                             <span class="text-[10px] text-red-100">ชั่วโมง</span>
                         </div>
                         <span class="text-2xl font-bold animate-pulse">:</span>
                         <div class="bg-red-600 px-3 py-2 rounded-xl min-w-[56px] shadow">
-                            <span id="fs-minutes" class="text-2xl sm:text-3xl font-bold block">42</span>
+                            <span id="fs-minutes" class="text-2xl sm:text-3xl font-bold block">59</span>
                             <span class="text-[10px] text-red-100">นาที</span>
                         </div>
                         <span class="text-2xl font-bold animate-pulse">:</span>
                         <div class="bg-red-600 px-3 py-2 rounded-xl min-w-[56px] shadow">
-                            <span id="fs-seconds" class="text-2xl sm:text-3xl font-bold block">19</span>
+                            <span id="fs-seconds" class="text-2xl sm:text-3xl font-bold block">59</span>
                             <span class="text-[10px] text-red-100">วินาที</span>
                         </div>
                     </div>
@@ -269,7 +263,7 @@
         <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-grow">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xl font-bold text-gray-900 flex items-center">
-                    <i class="fa-solid fa-tags text-red-500 mr-2"></i> สินค้าร่วมรายการลดราคาพิเศษ (5% - 15%)
+                    <i class="fa-solid fa-tags text-red-500 mr-2"></i> สินค้าร่วมรายการลดราคาพิเศษรอบนี้ (5% - 15%)
                 </h2>
                 <button onclick="switchPage('home')" class="text-sm text-primary hover:underline font-medium transition">
                     <i class="fa-solid fa-arrow-left mr-1"></i> ดูสินค้าปกติทั้งหมด
@@ -669,7 +663,6 @@
         const PROMPTPAY_NUMBER = "0623910008"; 
         const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1570114848656724109/ZYP72Deasv9zoUB-vdhG8ixueTXdWzmXV2FKWZ1IIyo3QMVIpgh3_udCftm-nuzyxrAY"; 
 
-        // State Variables & Shared Cart
         let products = [];
         let flashSaleProducts = [];
         let cart = JSON.parse(localStorage.getItem('electrohub_cart')) || [];
@@ -681,6 +674,7 @@
         let expandedCategory = null;
         let pendingEmailForOTP = '';
         let currentPendingOrder = null;
+        let lastFlashSaleHour = Math.floor(Date.now() / (1000 * 60 * 60));
 
         const saveCartToStorage = () => {
             localStorage.setItem('electrohub_cart', JSON.stringify(cart));
@@ -691,7 +685,7 @@
         };
 
         // ==========================================
-        // 2. ระบบ Scroll Reveal Animation (เลื่อนแล้วลอยขึ้นนุ่มนวล)
+        // 2. ระบบ Scroll Reveal Animation
         // ==========================================
         function initScrollReveal() {
             const observer = new IntersectionObserver((entries) => {
@@ -704,7 +698,6 @@
             }, { threshold: 0.08 });
 
             document.querySelectorAll('.reveal-card').forEach((card, index) => {
-                // หน่วงเวลาเล็กน้อยให้ขึ้นไล่เลี่ยกันทีละใบในแต่ละแถว
                 card.style.transitionDelay = `${(index % 4) * 60}ms`;
                 observer.observe(card);
             });
@@ -714,7 +707,7 @@
             const cartBtn = document.getElementById('cart-nav-btn');
             if (!cartBtn) return;
             cartBtn.classList.remove('cart-bounce');
-            void cartBtn.offsetWidth; // รีเซ็ตแอนิเมชัน
+            void cartBtn.offsetWidth;
             cartBtn.classList.add('cart-bounce');
         }
 
@@ -741,23 +734,54 @@
         }
 
         // ==========================================
-        // 4. ระบบโปรโมชั่นพิเศษ FLASH SALE (ลด 5% - 15%)
+        // 4. ระบบโปรโมชั่นพิเศษ FLASH SALE (ล็อกเปลี่ยนทุก 1 ชั่วโมง อิงราคาเต็ม)
         // ==========================================
+        function createHourlyRandom(seed) {
+            return function() {
+                seed |= 0;
+                seed = seed + 0x6D2B79F5 | 0;
+                let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+                t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            };
+        }
+
         function setupFlashSale() {
             if (products.length === 0) return;
-            const discountRates = [5, 8, 10, 12, 15, 10];
-            
-            flashSaleProducts = products.slice(0, 6).map((item, idx) => {
-                const discountPercent = discountRates[idx % discountRates.length];
-                const salePrice = Math.round(item.price * (1 - discountPercent / 100));
-                
+
+            // กรองเฉพาะสินค้าที่หน้าเว็บปกติ "ไม่มีส่วนลด" (ไม่มี originalPrice และป้าย badge ไม่มีคำว่าลด)
+            const nonDiscountedProducts = products.filter(item => {
+                const hasOriginalPrice = item.originalPrice !== null && item.originalPrice !== undefined && item.originalPrice > item.price;
+                const hasDiscountBadge = item.badge && (item.badge.includes('ลด') || item.badge.includes('%'));
+                return !hasOriginalPrice && !hasDiscountBadge;
+            });
+
+            const poolToPick = nonDiscountedProducts.length > 0 ? nonDiscountedProducts : products;
+            const currentHourSeed = Math.floor(Date.now() / (1000 * 60 * 60));
+            const hourlyRandom = createHourlyRandom(currentHourSeed);
+
+            const shuffled = [...poolToPick];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(hourlyRandom() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            const selectedItems = shuffled.slice(0, 6);
+
+            const discountPool = [5, 8, 10, 12, 15];
+
+            flashSaleProducts = selectedItems.map((item) => {
+                const randomDiscount = discountPool[Math.floor(hourlyRandom() * discountPool.length)];
+                const fullPrice = Number(item.price);
+                const salePrice = Math.round(fullPrice * (1 - randomDiscount / 100));
+                const randomSold = 40 + Math.floor(hourlyRandom() * 50);
+
                 return {
                     ...item,
                     flashSaleId: `fs_${item.id}`,
-                    originalNormalPrice: item.price,
+                    originalNormalPrice: fullPrice,
                     salePrice: salePrice,
-                    discountPercent: discountPercent,
-                    soldPercent: 45 + ((idx * 13) % 45)
+                    discountPercent: randomDiscount,
+                    soldPercent: randomSold
                 };
             });
 
@@ -852,14 +876,22 @@
         }
 
         function startFlashSaleCountdown() {
-            let totalSeconds = (5 * 3600) + (42 * 60) + 19;
-            setInterval(() => {
-                if (totalSeconds <= 0) totalSeconds = 6 * 3600;
-                totalSeconds--;
+            function updateTimer() {
+                const now = new Date();
+                const currentHour = Math.floor(now.getTime() / (1000 * 60 * 60));
 
-                const h = Math.floor(totalSeconds / 3600);
-                const m = Math.floor((totalSeconds % 3600) / 60);
-                const s = totalSeconds % 60;
+                if (currentHour !== lastFlashSaleHour) {
+                    lastFlashSaleHour = currentHour;
+                    setupFlashSale();
+                }
+
+                const nextHour = new Date(now);
+                nextHour.setHours(now.getHours() + 1, 0, 0, 0);
+                const diffSeconds = Math.max(0, Math.floor((nextHour - now) / 1000));
+
+                const h = Math.floor(diffSeconds / 3600);
+                const m = Math.floor((diffSeconds % 3600) / 60);
+                const s = diffSeconds % 60;
 
                 const hEl = document.getElementById('fs-hours');
                 const mEl = document.getElementById('fs-minutes');
@@ -868,7 +900,10 @@
                 if (hEl) hEl.innerText = String(h).padStart(2, '0');
                 if (mEl) mEl.innerText = String(m).padStart(2, '0');
                 if (sEl) sEl.innerText = String(s).padStart(2, '0');
-            }, 1000);
+            }
+
+            updateTimer();
+            setInterval(updateTimer, 1000);
         }
 
         // ==========================================
