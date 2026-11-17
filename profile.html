@@ -213,11 +213,40 @@
                     <p>ตะกร้าสินค้าว่างเปล่า</p>
                 </div>
             </div>
-            <div class="border-t p-6 bg-gray-50">
-                <div class="flex justify-between text-base font-medium text-gray-900 mb-4">
-                    <p>ยอดรวมทั้งสิ้น</p>
-                    <p id="cart-total">฿0</p>
+            <div class="border-t p-6 bg-gray-50 space-y-3">
+                <!-- ช่องกรอกโค้ดส่วนลด -->
+                <div>
+                    <div id="coupon-input-group" class="flex gap-2">
+                        <div class="relative flex-1">
+                            <i class="fa-solid fa-ticket absolute left-3 top-2.5 text-amber-500 text-xs"></i>
+                            <input type="text" id="cart-coupon-input" placeholder="กรอกโค้ดส่วนลด (เช่น HUB100-XXXX)" class="w-full pl-8 pr-3 py-2 bg-white border border-gray-300 rounded-xl text-xs uppercase focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <button type="button" onclick="applyCartCoupon()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap">
+                            ใช้โค้ด
+                        </button>
+                    </div>
+
+                    <!-- แถบแสดงเมื่อใช้โค้ดสำเร็จ -->
+                    <div id="applied-coupon-badge" class="hidden flex items-center justify-between bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-xl text-xs">
+                        <span class="font-semibold flex items-center">
+                            <i class="fa-solid fa-circle-check mr-1.5"></i> <span id="applied-coupon-text">HUB100 (-฿100)</span>
+                        </span>
+                        <button type="button" onclick="removeCartCoupon()" class="text-red-500 hover:text-red-700 font-bold ml-2">ลบ</button>
+                    </div>
                 </div>
+
+                <!-- แถวแสดงยอดส่วนลด -->
+                <div id="cart-discount-row" class="hidden flex justify-between text-sm font-medium text-green-600">
+                    <p>ส่วนลดคูปอง</p>
+                    <p id="cart-discount-amount">-฿0</p>
+                </div>
+
+                <!-- ยอดรวมสุทธิ -->
+                <div class="flex justify-between text-base font-bold text-gray-900 pt-1">
+                    <p>ยอดรวมสุทธิ</p>
+                    <p id="cart-total" class="text-primary text-lg">฿0</p>
+                </div>
+                <p class="text-xs text-gray-500">ราคานี้รวมภาษีมูลค่าเพิ่มแล้ว จัดส่งฟรี</p>
                 <button onclick="checkout()" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl shadow-md transition flex justify-center items-center">
                     ดำเนินการชำระเงิน <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
