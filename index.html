@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,84 +29,129 @@
         }
     </script>
     <style>
+        /* Custom Scrollbar */
         .cart-scroll::-webkit-scrollbar { width: 6px; }
         .cart-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
         .cart-scroll::-webkit-scrollbar-thumb { background: #b8b8b8; border-radius: 10px; }
         .cart-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
+        /* Toast Animation */
         @keyframes slideInUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from { transform: translateY(100%) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
         }
         @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
         }
-        .toast-enter { animation: slideInUp 0.3s ease-out forwards; }
-        .toast-exit { animation: fadeOut 0.3s ease-out forwards; }
+        .toast-enter { animation: slideInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .toast-exit { animation: fadeOut 0.25s ease-out forwards; }
+
+        /* Hero Text Fade In Up */
+        @keyframes heroFadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-hero-1 { animation: heroFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+        .animate-hero-2 { animation: heroFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
+        .animate-hero-3 { animation: heroFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
+
+        /* Scroll Reveal สำหรับการ์ดสินค้า */
+        .reveal-card {
+            opacity: 0;
+            transform: translateY(25px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+        }
+        .reveal-card.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-card.is-visible:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.1), 0 8px 10px -6px rgba(37, 99, 235, 0.08);
+        }
+
+        /* Cart Bounce เมื่อกดเพิ่มสินค้า */
+        @keyframes cartBounce {
+            0%, 100% { transform: scale(1); }
+            35% { transform: scale(1.3) rotate(-8deg); }
+            70% { transform: scale(0.9) rotate(4deg); }
+        }
+        .cart-bounce {
+            animation: cartBounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Shimmer Glow บนปุ่ม Flash Sale */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); }
+            50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+        }
+        .btn-glow {
+            animation: pulseGlow 2.2s infinite;
+        }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans flex flex-col min-h-screen overflow-x-hidden w-full">
+<body class="bg-gray-50 text-gray-800 font-sans flex flex-col min-h-screen overflow-x-hidden w-full selection:bg-primary selection:text-white">
 
-    <!-- Navbar -->
-    <nav class="bg-white shadow-sm sticky top-0 z-40 w-full">
+    <!-- Navbar (แบบกระจกฝ้าโปร่งแสง Glassmorphism) -->
+    <nav class="bg-white/85 backdrop-blur-md shadow-sm border-b border-gray-100/80 sticky top-0 z-40 w-full transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
-                <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="switchPage('home')">
-                    <i class="fa-solid fa-microchip text-primary text-2xl mr-2"></i>
+                <div class="flex-shrink-0 flex items-center cursor-pointer group" onclick="switchPage('home')">
+                    <i class="fa-solid fa-microchip text-primary text-2xl mr-2 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"></i>
                     <span class="font-bold text-xl sm:text-2xl tracking-tight text-secondary">Electro<span class="text-primary">Hub</span></span>
                 </div>
                 
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex space-x-6 lg:space-x-8 items-center">
-                    <button onclick="switchPage('home')" id="nav-home" class="nav-link text-primary font-semibold transition">หน้าแรก</button>
-                    <button onclick="toggleCategoryDrawer()" class="text-gray-600 hover:text-primary transition font-medium flex items-center">
-                        <i class="fa-solid fa-layer-group mr-1.5 text-xs text-primary"></i> หมวดหมู่สินค้า
+                    <button onclick="switchPage('home')" id="nav-home" class="nav-link text-primary font-semibold transition duration-200">หน้าแรก</button>
+                    <button onclick="toggleCategoryDrawer()" class="text-gray-600 hover:text-primary transition duration-200 font-medium flex items-center group">
+                        <i class="fa-solid fa-layer-group mr-1.5 text-xs text-primary transition-transform group-hover:scale-110"></i> หมวดหมู่สินค้า
                     </button>
-                    <button onclick="switchPage('promo')" id="nav-promo" class="nav-link text-gray-600 hover:text-primary transition font-medium flex items-center">
+                    <button onclick="switchPage('promo')" id="nav-promo" class="nav-link text-gray-600 hover:text-primary transition duration-200 font-medium flex items-center">
                         <i class="fa-solid fa-bolt text-amber-500 mr-1.5"></i> โปรโมชั่นพิเศษ
                     </button>
-                    <button onclick="switchPage('contact')" id="nav-contact" class="nav-link text-gray-600 hover:text-primary transition font-medium">ติดต่อเรา</button>
+                    <button onclick="switchPage('contact')" id="nav-contact" class="nav-link text-gray-600 hover:text-primary transition duration-200 font-medium">ติดต่อเรา</button>
                 </div>
 
                 <!-- Search Bar (Desktop) -->
                 <div class="hidden lg:flex items-center flex-1 max-w-xs mx-6">
-                    <div class="relative w-full">
-                        <input type="text" id="search-input" onkeyup="handleSearchInput()" placeholder="ค้นหาสินค้า..." class="w-full bg-gray-100 text-sm pl-9 pr-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                    <div class="relative w-full group">
+                        <input type="text" id="search-input" onkeyup="handleSearchInput()" placeholder="ค้นหาสินค้า..." class="w-full bg-gray-100/90 text-sm pl-9 pr-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white transition-all duration-300">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 group-focus-within:text-primary transition-colors text-sm"></i>
                     </div>
                 </div>
 
                 <!-- Right Actions: Auth & Cart -->
                 <div class="flex items-center space-x-2 sm:space-x-3">
                     <div id="auth-section">
-                        <button id="login-btn" onclick="openAuthModal('login')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition flex items-center whitespace-nowrap">
+                        <button id="login-btn" onclick="openAuthModal('login')" class="bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-800 font-medium px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition-all duration-200 flex items-center whitespace-nowrap">
                             <i class="fa-regular fa-user sm:mr-2"></i> <span class="hidden sm:inline">เข้าสู่ระบบ</span>
                         </button>
 
                         <div id="user-menu" class="relative hidden">
-                            <button onclick="toggleUserDropdown()" class="flex items-center space-x-1.5 sm:space-x-2 bg-blue-50 text-primary font-medium px-2.5 sm:px-3 py-1.5 rounded-full hover:bg-blue-100 transition focus:outline-none">
-                                <div class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs" id="user-avatar">U</div>
+                            <button onclick="toggleUserDropdown()" class="flex items-center space-x-1.5 sm:space-x-2 bg-blue-50 text-primary font-medium px-2.5 sm:px-3 py-1.5 rounded-full hover:bg-blue-100 active:scale-95 transition-all duration-200 focus:outline-none">
+                                <div class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs shadow-sm" id="user-avatar">U</div>
                                 <span id="user-display-name" class="text-xs sm:text-sm max-w-[90px] sm:max-w-[140px] truncate">คุณสมชาย</span>
                                 <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
                             </button>
 
-                            <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 hidden border border-gray-100">
-                                <a href="#" onclick="openOrdersModal()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"><i class="fa-solid fa-box mr-2 text-gray-400"></i> ประวัติการสั่งซื้อ</a>
+                            <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 hidden border border-gray-100 origin-top-right transition-all">
+                                <a href="#" onclick="openOrdersModal()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary transition flex items-center"><i class="fa-solid fa-box mr-2 text-gray-400"></i> ประวัติการสั่งซื้อ</a>
                                 <hr class="my-1 border-gray-100">
-                                <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"><i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> ออกจากระบบ</button>
+                                <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition flex items-center"><i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> ออกจากระบบ</button>
                             </div>
                         </div>
                     </div>
 
-                    <button onclick="toggleCart()" class="relative p-2 text-gray-600 hover:text-primary transition focus:outline-none">
+                    <button id="cart-nav-btn" onclick="toggleCart()" class="relative p-2 text-gray-600 hover:text-primary active:scale-90 transition-all duration-200 focus:outline-none">
                         <i class="fa-solid fa-cart-shopping text-xl"></i>
-                        <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full">0</span>
+                        <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full shadow-sm">0</span>
                     </button>
                     
                     <div class="md:hidden">
-                        <button onclick="toggleCategoryDrawer()" class="text-gray-600 hover:text-primary focus:outline-none p-2">
+                        <button onclick="toggleCategoryDrawer()" class="text-gray-600 hover:text-primary active:scale-90 transition focus:outline-none p-2">
                             <i class="fa-solid fa-bars text-xl"></i>
                         </button>
                     </div>
@@ -122,24 +167,24 @@
         <!-- Hero Section -->
         <div class="bg-secondary text-white relative overflow-hidden min-h-[420px] md:min-h-[560px] flex items-center w-full">
             <div class="absolute inset-0 z-0">
-                <img src="./images/electronics_banner_1920x600.png" alt="ElectroHub Background" class="w-full h-full object-cover object-center">
-                <div class="absolute inset-0 bg-gradient-to-r from-slate-900/85 via-slate-900/50 to-transparent"></div>
+                <img src="./images/electronics_banner_1920x600.png" alt="ElectroHub Background" class="w-full h-full object-cover object-center scale-105 transition-transform duration-1000">
+                <div class="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/55 to-transparent"></div>
             </div>
 
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 relative z-10 w-full">
                 <div class="md:w-2/3 lg:w-1/2">
-                    <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
+                    <h1 class="animate-hero-1 text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
                         นวัตกรรมแห่งอนาคต <br>
-                        <span class="text-primary">อยู่ในมือคุณแล้ววันนี้</span>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">อยู่ในมือคุณแล้ววันนี้</span>
                     </h1>
-                    <p class="text-base sm:text-lg text-gray-300 mb-8 max-w-xl">
+                    <p class="animate-hero-2 text-base sm:text-lg text-gray-300 mb-8 max-w-xl leading-relaxed">
                         พบกับสมาร์ทโฟน แล็ปท็อป และอุปกรณ์แกดเจ็ตระดับพรีเมียมในราคาพิเศษ พร้อมบริการจัดส่งฟรีทั่วประเทศ
                     </p>
-                    <div class="flex flex-wrap gap-3">
-                        <a href="#products" class="inline-block bg-primary hover:bg-blue-700 text-white font-medium py-3 px-7 rounded-full shadow-lg transition transform hover:-translate-y-1">
+                    <div class="animate-hero-3 flex flex-wrap gap-3">
+                        <a href="#products" class="inline-block bg-primary hover:bg-blue-700 active:scale-95 text-white font-medium py-3 px-7 rounded-full shadow-lg shadow-blue-600/30 transition-all duration-300 transform hover:-translate-y-1">
                             ช้อปเลยตอนนี้
                         </a>
-                        <button onclick="switchPage('promo')" class="inline-flex items-center bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 px-7 rounded-full shadow-lg transition transform hover:-translate-y-1">
+                        <button onclick="switchPage('promo')" class="btn-glow inline-flex items-center bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-900 font-bold py-3 px-7 rounded-full shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                             <i class="fa-solid fa-bolt mr-2"></i> Flash Sale ลดสูงสุด 15%
                         </button>
                     </div>
@@ -147,15 +192,15 @@
             </div>
         </div>
 
-        <!-- Category Filters Bar (เมนู 3 ขีดเลือกหมวดหมู่หลัก & หมวดหมู่ย่อย) -->
+        <!-- Category Filters Bar -->
         <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 w-full">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                 <div class="flex flex-wrap items-center gap-3">
-                    <button onclick="toggleCategoryDrawer()" class="flex items-center space-x-2.5 bg-primary hover:bg-blue-700 text-white font-medium px-4 py-2.5 rounded-xl shadow-sm transition focus:outline-none">
+                    <button onclick="toggleCategoryDrawer()" class="flex items-center space-x-2.5 bg-primary hover:bg-blue-700 active:scale-95 text-white font-medium px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none">
                         <i class="fa-solid fa-bars text-lg"></i>
                         <span>เลือกหมวดหมู่สินค้า</span>
                     </button>
-                    <div class="text-sm text-gray-600 flex items-center bg-gray-50 px-3 py-2 rounded-xl border border-gray-200">
+                    <div class="text-sm text-gray-600 flex items-center bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-200/80">
                         <span class="text-gray-500 mr-1.5">หมวดหมู่:</span>
                         <span id="current-category-label" class="font-bold text-primary">ทั้งหมด</span>
                     </div>
@@ -164,7 +209,7 @@
                 <!-- Mobile Search -->
                 <div class="w-full sm:w-auto flex-1 max-w-sm lg:hidden">
                     <div class="relative w-full">
-                        <input type="text" id="mobile-search-input" onkeyup="syncMobileSearch(this.value)" placeholder="ค้นหาสินค้า..." class="w-full bg-gray-100 text-sm pl-9 pr-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition">
+                        <input type="text" id="mobile-search-input" onkeyup="syncMobileSearch(this.value)" placeholder="ค้นหาสินค้า..." class="w-full bg-gray-100 text-sm pl-9 pr-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition-all">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
                     </div>
                 </div>
@@ -185,12 +230,12 @@
     <div id="page-promo" class="page-view hidden flex-grow flex flex-col">
         <div class="bg-gradient-to-r from-red-600 via-orange-600 to-amber-500 text-white py-12 px-4 sm:px-6 lg:px-8 shadow-inner">
             <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-                <div>
+                <div class="animate-hero-1">
                     <div class="inline-flex items-center bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase mb-3">
                         <i class="fa-solid fa-fire text-yellow-300 mr-1.5"></i> ดีลเดือดจำนวนจำกัด
                     </div>
                     <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight flex items-center">
-                        <i class="fa-solid fa-bolt text-yellow-300 mr-3 animate-pulse"></i> FLASH SALE
+                        <i class="fa-solid fa-bolt text-yellow-300 mr-3 animate-bounce"></i> FLASH SALE
                     </h1>
                     <p class="text-white/90 text-base sm:text-lg mt-2">
                         คัดสินค้าตัวท็อปในร้านมาลดราคาพิเศษทันที <span class="font-bold underline decoration-yellow-300">5% - 15%</span> หมดแล้วหมดเลย!
@@ -198,20 +243,20 @@
                 </div>
 
                 <!-- Countdown Timer -->
-                <div class="bg-slate-900/80 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/10 text-center">
+                <div class="animate-hero-2 bg-slate-900/80 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/10 text-center shadow-xl">
                     <p class="text-xs text-gray-300 mb-2 font-medium">สิ้นสุดโปรโมชั่นรอบนี้ในอีก</p>
                     <div class="flex items-center space-x-2 sm:space-x-3 text-white font-mono">
-                        <div class="bg-red-600 px-3 py-2 rounded-xl min-w-[56px]">
+                        <div class="bg-red-600 px-3 py-2 rounded-xl min-w-[56px] shadow">
                             <span id="fs-hours" class="text-2xl sm:text-3xl font-bold block">05</span>
                             <span class="text-[10px] text-red-100">ชั่วโมง</span>
                         </div>
-                        <span class="text-2xl font-bold">:</span>
-                        <div class="bg-red-600 px-3 py-2 rounded-xl min-w-[56px]">
+                        <span class="text-2xl font-bold animate-pulse">:</span>
+                        <div class="bg-red-600 px-3 py-2 rounded-xl min-w-[56px] shadow">
                             <span id="fs-minutes" class="text-2xl sm:text-3xl font-bold block">42</span>
                             <span class="text-[10px] text-red-100">นาที</span>
                         </div>
-                        <span class="text-2xl font-bold">:</span>
-                        <div class="bg-red-600 px-3 py-2 rounded-xl min-w-[56px]">
+                        <span class="text-2xl font-bold animate-pulse">:</span>
+                        <div class="bg-red-600 px-3 py-2 rounded-xl min-w-[56px] shadow">
                             <span id="fs-seconds" class="text-2xl sm:text-3xl font-bold block">19</span>
                             <span class="text-[10px] text-red-100">วินาที</span>
                         </div>
@@ -225,7 +270,7 @@
                 <h2 class="text-xl font-bold text-gray-900 flex items-center">
                     <i class="fa-solid fa-tags text-red-500 mr-2"></i> สินค้าร่วมรายการลดราคาพิเศษ (5% - 15%)
                 </h2>
-                <button onclick="switchPage('home')" class="text-sm text-primary hover:underline font-medium">
+                <button onclick="switchPage('home')" class="text-sm text-primary hover:underline font-medium transition">
                     <i class="fa-solid fa-arrow-left mr-1"></i> ดูสินค้าปกติทั้งหมด
                 </button>
             </div>
@@ -241,7 +286,7 @@
     <!-- ===================================================================== -->
     <div id="page-contact" class="page-view hidden flex-grow flex flex-col">
         <div class="bg-secondary text-white py-12 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-7xl mx-auto text-center">
+            <div class="max-w-7xl mx-auto text-center animate-hero-1">
                 <h1 class="text-3xl sm:text-4xl font-bold mb-3">ติดต่อเรา (Contact Us)</h1>
                 <p class="text-gray-300 max-w-2xl mx-auto text-sm sm:text-base">
                     มีข้อสงสัยเกี่ยวกับสินค้า ต้องการคำแนะนำสเปกอุปกรณ์ หรือแจ้งปัญหาคำสั่งซื้อ ทีมงาน ElectroHub พร้อมดูแลคุณ
@@ -251,8 +296,8 @@
 
         <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-grow">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="space-y-4">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="space-y-4 animate-hero-2">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                         <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
                             <i class="fa-solid fa-store text-primary mr-2"></i> ข้อมูลร้าน ElectroHub
                         </h3>
@@ -297,7 +342,7 @@
                     </div>
                 </div>
 
-                <div class="lg:col-span-2 bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
+                <div class="lg:col-span-2 bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 animate-hero-3">
                     <h3 class="text-xl font-bold text-gray-900 mb-2">ส่งข้อความถึงทีมงาน</h3>
                     <p class="text-sm text-gray-500 mb-6">กรอกรายละเอียดด้านล่าง ข้อความของคุณจะถูกส่งตรงไปยังแอดมินทันที</p>
 
@@ -305,16 +350,16 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล ของคุณ *</label>
-                                <input type="text" id="contact-name" required placeholder="เช่น สมชาย ใจดี" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                <input type="text" id="contact-name" required placeholder="เช่น สมชาย ใจดี" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm transition">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล หรือ เบอร์โทรติดต่อกลับ *</label>
-                                <input type="text" id="contact-email" required placeholder="name@example.com / 08X-XXX-XXXX" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                <input type="text" id="contact-email" required placeholder="name@example.com / 08X-XXX-XXXX" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm transition">
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">หัวข้อที่ต้องการติดต่อ *</label>
-                            <select id="contact-subject" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-white">
+                            <select id="contact-subject" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-white transition">
                                 <option value="สอบถามข้อมูลสินค้า / สเปกอุปกรณ์">สอบถามข้อมูลสินค้า / สเปกอุปกรณ์</option>
                                 <option value="ติดตามสถานะคำสั่งซื้อ / การจัดส่ง">ติดตามสถานะคำสั่งซื้อ / การจัดส่ง</option>
                                 <option value="แจ้งเคลมสินค้า / สินค้ามีปัญหา">แจ้งเคลมสินค้า / สินค้ามีปัญหา</option>
@@ -323,9 +368,9 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">รายละเอียดข้อความ *</label>
-                            <textarea id="contact-message" rows="4" required placeholder="พิมพ์ข้อความหรือรายละเอียดที่ต้องการสอบถาม..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm"></textarea>
+                            <textarea id="contact-message" rows="4" required placeholder="พิมพ์ข้อความหรือรายละเอียดที่ต้องการสอบถาม..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm transition"></textarea>
                         </div>
-                        <button type="submit" id="contact-submit-btn" class="w-full sm:w-auto bg-primary hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-xl shadow-md transition flex items-center justify-center text-sm">
+                        <button type="submit" id="contact-submit-btn" class="w-full sm:w-auto bg-primary hover:bg-blue-700 active:scale-95 text-white font-medium px-8 py-3 rounded-xl shadow-md transition-all flex items-center justify-center text-sm">
                             <i class="fa-solid fa-paper-plane mr-2"></i> ส่งข้อความติดต่อเรา
                         </button>
                     </form>
@@ -336,14 +381,14 @@
 
     <!-- Category Sidebar Drawer (เมนู 3 ขีด แบบซ่อน/กางหมวดย่อยได้) -->
     <div id="category-drawer" class="fixed inset-0 z-50 invisible">
-        <div id="category-backdrop" class="absolute inset-0 bg-black bg-opacity-50 opacity-0 transition-opacity duration-300" onclick="toggleCategoryDrawer()"></div>
+        <div id="category-backdrop" class="absolute inset-0 bg-black/50 backdrop-blur-xs opacity-0 transition-opacity duration-300" onclick="toggleCategoryDrawer()"></div>
         
-        <div id="category-panel" class="absolute inset-y-0 left-0 max-w-xs w-[85vw] sm:w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col">
+        <div id="category-panel" class="absolute inset-y-0 left-0 max-w-xs w-[85vw] sm:w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 ease-out flex flex-col">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
                 <h2 class="text-lg font-bold text-gray-900 flex items-center">
                     <i class="fa-solid fa-layer-group mr-2 text-primary"></i> เมนู & หมวดหมู่
                 </h2>
-                <button onclick="toggleCategoryDrawer()" class="text-gray-400 hover:text-gray-600 focus:outline-none p-2">
+                <button onclick="toggleCategoryDrawer()" class="text-gray-400 hover:text-gray-600 focus:outline-none p-2 transition-transform hover:rotate-90">
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
@@ -406,10 +451,10 @@
                 <div>
                     <h3 class="text-white font-semibold mb-4">ติดตามเรา</h3>
                     <div class="flex space-x-4">
-                        <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition"><i class="fa-brands fa-facebook-f"></i></a>
-                        <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition"><i class="fa-brands fa-twitter"></i></a>
-                        <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition"><i class="fa-brands fa-instagram"></i></a>
-                        <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition"><i class="fa-brands fa-line"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition-all hover:-translate-y-1"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition-all hover:-translate-y-1"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition-all hover:-translate-y-1"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition-all hover:-translate-y-1"><i class="fa-brands fa-line"></i></a>
                     </div>
                 </div>
             </div>
@@ -421,11 +466,11 @@
 
     <!-- Shopping Cart Sidebar -->
     <div id="cart-sidebar" class="fixed inset-0 z-50 invisible">
-        <div id="cart-backdrop" class="absolute inset-0 bg-black bg-opacity-50 opacity-0 transition-opacity duration-300" onclick="toggleCart()"></div>
-        <div id="cart-panel" class="absolute inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div id="cart-backdrop" class="absolute inset-0 bg-black/50 backdrop-blur-xs opacity-0 transition-opacity duration-300" onclick="toggleCart()"></div>
+        <div id="cart-panel" class="absolute inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-out flex flex-col">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
                 <h2 class="text-lg font-bold text-gray-900"><i class="fa-solid fa-cart-shopping mr-2 text-primary"></i> ตะกร้าสินค้าของคุณ</h2>
-                <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-600 focus:outline-none p-2">
+                <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-600 focus:outline-none p-2 transition-transform hover:rotate-90">
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
@@ -444,7 +489,7 @@
                     <p id="cart-total">฿0</p>
                 </div>
                 <p class="text-sm text-gray-500 mb-6">ราคานี้รวมภาษีมูลค่าเพิ่มแล้ว จัดส่งฟรี</p>
-                <button onclick="checkout()" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl shadow-md transition flex justify-center items-center">
+                <button onclick="checkout()" class="w-full bg-primary hover:bg-blue-700 active:scale-95 text-white font-medium py-3 px-4 rounded-xl shadow-md transition-all flex justify-center items-center">
                     ดำเนินการชำระเงิน <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
             </div>
@@ -456,9 +501,9 @@
 
     <!-- Login / Register Modal -->
     <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
-        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closeAuthModal()"></div>
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeAuthModal()"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden z-10 transform transition-all">
-            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2 z-20">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2 z-20 transition-transform hover:rotate-90">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
 
@@ -478,17 +523,17 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
                         <div class="relative">
                             <i class="fa-regular fa-envelope absolute left-3 top-3 text-gray-400"></i>
-                            <input type="email" id="login-email" required placeholder="name@example.com" autocomplete="off" autocapitalize="none" spellcheck="false" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <input type="email" id="login-email" required placeholder="name@example.com" autocomplete="off" autocapitalize="none" spellcheck="false" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition">
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
                         <div class="relative">
                             <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400"></i>
-                            <input type="password" id="login-password" required placeholder="••••••••" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <input type="password" id="login-password" required placeholder="••••••••" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition">
                         </div>
                     </div>
-                    <button type="submit" id="login-submit-btn" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
+                    <button type="submit" id="login-submit-btn" class="w-full bg-primary hover:bg-blue-700 active:scale-95 text-white font-medium py-2.5 rounded-xl shadow-md transition-all text-sm">
                         เข้าสู่ระบบ
                     </button>
                 </form>
@@ -499,31 +544,31 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล</label>
                         <div class="relative">
                             <i class="fa-regular fa-user absolute left-3 top-3 text-gray-400"></i>
-                            <input type="text" id="reg-name" required placeholder="สมชาย ใจดี" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <input type="text" id="reg-name" required placeholder="สมชาย ใจดี" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition">
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
                         <div class="relative">
                             <i class="fa-regular fa-envelope absolute left-3 top-3 text-gray-400"></i>
-                            <input type="email" id="reg-email" required placeholder="name@example.com" autocomplete="off" autocapitalize="none" spellcheck="false" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <input type="email" id="reg-email" required placeholder="name@example.com" autocomplete="off" autocapitalize="none" spellcheck="false" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition">
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
                         <div class="relative">
                             <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400"></i>
-                            <input type="password" id="reg-password" required placeholder="อย่างน้อย 6 ตัวอักษร" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <input type="password" id="reg-password" required placeholder="อย่างน้อย 6 ตัวอักษร" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition">
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">ยืนยันรหัสผ่าน</label>
                         <div class="relative">
                             <i class="fa-solid fa-shield-halved absolute left-3 top-3 text-gray-400"></i>
-                            <input type="password" id="reg-confirm-password" required placeholder="••••••••" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <input type="password" id="reg-confirm-password" required placeholder="••••••••" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition">
                         </div>
                     </div>
-                    <button type="submit" id="reg-submit-btn" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
+                    <button type="submit" id="reg-submit-btn" class="w-full bg-primary hover:bg-blue-700 active:scale-95 text-white font-medium py-2.5 rounded-xl shadow-md transition-all text-sm">
                         สมัครสมาชิก
                     </button>
                 </form>
@@ -539,7 +584,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">กรอกรหัสยืนยันตัวตนจากอีเมล</label>
                         <input type="text" id="otp-code" required placeholder="กรอกรหัสจากอีเมล" autocomplete="off" class="w-full text-center text-xl tracking-widest py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary font-mono">
                     </div>
-                    <button type="submit" id="otp-submit-btn" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
+                    <button type="submit" id="otp-submit-btn" class="w-full bg-primary hover:bg-blue-700 active:scale-95 text-white font-medium py-2.5 rounded-xl shadow-md transition-all text-sm">
                         ยืนยันรหัส OTP
                     </button>
                     <button type="button" onclick="cancelOTP()" class="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 rounded-xl transition text-sm">
@@ -552,13 +597,13 @@
 
     <!-- Order History Modal -->
     <div id="orders-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
-        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closeOrdersModal()"></div>
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeOrdersModal()"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col z-10 overflow-hidden">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
                 <h3 class="text-lg font-bold text-gray-900 flex items-center">
                     <i class="fa-solid fa-box-archive mr-2 text-primary"></i> ประวัติการสั่งซื้อของฉัน
                 </h3>
-                <button onclick="closeOrdersModal()" class="text-gray-400 hover:text-gray-600 p-2">
+                <button onclick="closeOrdersModal()" class="text-gray-400 hover:text-gray-600 p-2 transition-transform hover:rotate-90">
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
@@ -574,14 +619,14 @@
 
     <!-- Payment Modal (PromptPay QR Code) -->
     <div id="payment-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
-        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closePaymentModal()"></div>
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closePaymentModal()"></div>
         
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 z-10 overflow-hidden transform transition-all">
             <div class="flex justify-between items-center pb-3 border-b mb-4">
                 <h3 class="text-lg font-bold text-gray-900 flex items-center">
                     <i class="fa-solid fa-qrcode text-primary mr-2"></i> ชำระเงินผ่าน PromptPay QR
                 </h3>
-                <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600 p-1">
+                <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600 p-1 transition-transform hover:rotate-90">
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
@@ -604,7 +649,7 @@
                     <input type="file" id="slip-file-input" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-primary hover:file:bg-blue-100 transition">
                 </div>
 
-                <button id="confirm-payment-btn" onclick="submitPaymentWithSlip()" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-3 rounded-xl shadow-md transition mt-2 flex justify-center items-center text-sm">
+                <button id="confirm-payment-btn" onclick="submitPaymentWithSlip()" class="w-full bg-primary hover:bg-blue-700 active:scale-95 text-white font-medium py-3 rounded-xl shadow-md transition-all mt-2 flex justify-center items-center text-sm">
                     <i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการชำระเงิน
                 </button>
             </div>
@@ -632,7 +677,7 @@
         let currentUser = null;
         let activeCategory = 'all';
         let activeSubcategory = 'all';
-        let expandedCategory = null; // เก็บสถานะว่าหมวดหมู่หลักไหนกำลังกางเมนูย่อยอยู่
+        let expandedCategory = null;
         let pendingEmailForOTP = '';
         let currentPendingOrder = null;
 
@@ -640,13 +685,40 @@
             localStorage.setItem('electrohub_cart', JSON.stringify(cart));
         };
 
-        // Format Currency
         const formatPrice = (price) => {
             return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(price);
         };
 
         // ==========================================
-        // 2. ระบบสลับหน้าเว็บ (Home / Flash Sale / Contact)
+        // 2. ระบบ Scroll Reveal Animation (เลื่อนแล้วลอยขึ้นนุ่มนวล)
+        // ==========================================
+        function initScrollReveal() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.08 });
+
+            document.querySelectorAll('.reveal-card').forEach((card, index) => {
+                // หน่วงเวลาเล็กน้อยให้ขึ้นไล่เลี่ยกันทีละใบในแต่ละแถว
+                card.style.transitionDelay = `${(index % 4) * 60}ms`;
+                observer.observe(card);
+            });
+        }
+
+        function triggerCartBounce() {
+            const cartBtn = document.getElementById('cart-nav-btn');
+            if (!cartBtn) return;
+            cartBtn.classList.remove('cart-bounce');
+            void cartBtn.offsetWidth; // รีเซ็ตแอนิเมชัน
+            cartBtn.classList.add('cart-bounce');
+        }
+
+        // ==========================================
+        // 3. ระบบสลับหน้าเว็บ (Home / Flash Sale / Contact)
         // ==========================================
         function switchPage(pageName) {
             document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
@@ -657,17 +729,18 @@
                 const btn = document.getElementById(`nav-${nav}`);
                 if (!btn) return;
                 if (nav === pageName) {
-                    btn.className = 'nav-link text-primary font-semibold transition flex items-center';
+                    btn.className = 'nav-link text-primary font-semibold transition duration-200 flex items-center';
                 } else {
-                    btn.className = 'nav-link text-gray-600 hover:text-primary transition font-medium flex items-center';
+                    btn.className = 'nav-link text-gray-600 hover:text-primary transition duration-200 font-medium flex items-center';
                 }
             });
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(initScrollReveal, 50);
         }
 
         // ==========================================
-        // 3. ระบบโปรโมชั่นพิเศษ FLASH SALE (ลด 5% - 15%)
+        // 4. ระบบโปรโมชั่นพิเศษ FLASH SALE (ลด 5% - 15%)
         // ==========================================
         function setupFlashSale() {
             if (products.length === 0) return;
@@ -702,7 +775,7 @@
 
             flashSaleProducts.forEach(item => {
                 const cardHtml = `
-                    <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-amber-100 flex flex-col relative group">
+                    <div class="reveal-card bg-white rounded-2xl shadow-sm overflow-hidden border-2 border-amber-100 flex flex-col relative group">
                         <div class="absolute top-3 left-3 bg-gradient-to-r from-red-600 to-orange-500 text-white text-xs font-extrabold px-3 py-1.5 rounded-full shadow-md z-10 flex items-center">
                             <i class="fa-solid fa-bolt text-yellow-300 mr-1"></i> ลด ${item.discountPercent}%
                         </div>
@@ -730,15 +803,15 @@
                                         <span class="text-red-500 font-semibold">ใกล้หมดแล้ว!</span>
                                     </div>
                                     <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                                        <div class="bg-gradient-to-r from-red-500 to-amber-500 h-2 rounded-full" style="width: ${item.soldPercent}%"></div>
+                                        <div class="bg-gradient-to-r from-red-500 to-amber-500 h-2 rounded-full transition-all duration-700" style="width: ${item.soldPercent}%"></div>
                                     </div>
                                 </div>
 
                                 <div class="flex gap-2 mt-4">
-                                    <a href="product.html?id=${item.id}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-3 rounded-xl transition flex items-center justify-center text-xs">
+                                    <a href="product.html?id=${item.id}" class="bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-700 font-medium py-2.5 px-3 rounded-xl transition flex items-center justify-center text-xs">
                                         รายละเอียด
                                     </a>
-                                    <button onclick="addFlashSaleToCart(${item.id})" class="flex-1 bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white font-semibold py-2.5 px-3 rounded-xl shadow-sm transition flex items-center justify-center text-xs sm:text-sm">
+                                    <button onclick="addFlashSaleToCart(${item.id})" class="flex-1 bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 active:scale-95 text-white font-semibold py-2.5 px-3 rounded-xl shadow-sm transition-all flex items-center justify-center text-xs sm:text-sm">
                                         <i class="fa-solid fa-cart-plus mr-1.5"></i> รับสิทธิ์ลดราคา
                                     </button>
                                 </div>
@@ -748,6 +821,8 @@
                 `;
                 grid.innerHTML += cardHtml;
             });
+
+            initScrollReveal();
         }
 
         function addFlashSaleToCart(productId) {
@@ -771,6 +846,7 @@
 
             saveCartToStorage();
             updateCartUI();
+            triggerCartBounce();
             showToast(`เพิ่ม <b>${fsItem.name}</b> (ลด ${fsItem.discountPercent}%) ลงตะกร้าแล้ว!`, "success");
         }
 
@@ -795,7 +871,7 @@
         }
 
         // ==========================================
-        // 4. ระบบติดต่อเรา (Contact Us Form + แจ้งเตือน Discord)
+        // 5. ระบบติดต่อเรา (Contact Us Form + แจ้งเตือน Discord)
         // ==========================================
         async function handleContactSubmit(event) {
             event.preventDefault();
@@ -847,7 +923,7 @@
         }
 
         // ==========================================
-        // 5. ฟังก์ชันจัดการสินค้าและเมนูหมวดหมู่ 2 ชั้น (ซ่อน/กางหมวดย่อยได้)
+        // 6. ฟังก์ชันจัดการสินค้าและเมนูหมวดหมู่ 2 ชั้น (ซ่อน/กางหมวดย่อยได้)
         // ==========================================
         function handleSearchInput() {
             if (document.getElementById('page-home').classList.contains('hidden')) {
@@ -898,7 +974,6 @@
         }
 
         function toggleSubcategoryMenu(cat) {
-            // ถ้ากดซ้ำหมวดเดิมให้พับเก็บ ถ้ากดหมวดใหม่ให้กางออก
             expandedCategory = (expandedCategory === cat) ? null : cat;
             filterCategory(cat, 'all');
         }
@@ -922,8 +997,6 @@
             renderCategoryButtons();
             filterProducts();
 
-            // ปิดเมนู 3 ขีดอัตโนมัติ เฉพาะตอนกดเลือก "ทั้งหมด" หรือกดเลือก "หมวดหมู่ย่อย"
-            // (ถ้ากดหมวดหมู่หลักที่มีหมวดย่อย จะกางเมนูย่อยให้ดูก่อน ไม่รีบปิด)
             const hasSubcats = category !== 'all' && products.some(p => p.category === category && p.subcategory);
             if (isCategoryOpen && (category === 'all' || subcategory !== 'all' || !hasSubcats)) {
                 toggleCategoryDrawer();
@@ -942,14 +1015,12 @@
                 const isCatActive = cat === activeCategory;
                 const count = isAll ? products.length : products.filter(p => p.category === cat).length;
 
-                // ดึงหมวดหมู่ย่อยทั้งหมดที่อยู่ในหมวดหลักนี้
                 const subcats = isAll ? [] : [...new Set(products.filter(p => p.category === cat && p.subcategory).map(p => p.subcategory))];
                 const isExpanded = expandedCategory === cat;
 
                 const wrapper = document.createElement('div');
                 wrapper.className = 'space-y-1';
 
-                // ปุ่มหมวดหมู่หลัก
                 const btn = document.createElement('button');
                 btn.onclick = () => {
                     if (subcats.length > 0) {
@@ -960,7 +1031,7 @@
                     }
                 };
 
-                btn.className = `w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition ${
+                btn.className = `w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                     isCatActive && activeSubcategory === 'all'
                     ? 'bg-primary text-white shadow-sm' 
                     : isCatActive 
@@ -968,9 +1039,8 @@
                       : 'text-gray-700 hover:bg-blue-50 hover:text-primary'
                 }`;
                 
-                // ลูกศรบอกสถานะกาง/ซ่อน สำหรับหมวดที่มีหมวดย่อย
                 const arrowHtml = subcats.length > 0 
-                    ? `<i class="fa-solid fa-chevron-${isExpanded ? 'up' : 'down'} text-[10px] ml-2 ${isCatActive && activeSubcategory === 'all' ? 'text-white' : 'text-gray-400'}"></i>` 
+                    ? `<i class="fa-solid fa-chevron-${isExpanded ? 'up' : 'down'} text-[10px] ml-2 transition-transform duration-200 ${isCatActive && activeSubcategory === 'all' ? 'text-white' : 'text-gray-400'}"></i>` 
                     : '';
 
                 btn.innerHTML = `
@@ -985,10 +1055,9 @@
                 `;
                 wrapper.appendChild(btn);
 
-                // แสดงหมวดหมู่ย่อยเฉพาะตอนที่กดกาง (isExpanded === true) เท่านั้น
                 if (subcats.length > 0 && isExpanded) {
                     const subContainer = document.createElement('div');
-                    subContainer.className = 'pl-7 pr-1 space-y-1 border-l-2 border-blue-100 ml-5 my-1';
+                    subContainer.className = 'pl-7 pr-1 space-y-1 border-l-2 border-blue-100 ml-5 my-1 transition-all duration-300';
 
                     subcats.forEach(sub => {
                         const subCount = products.filter(p => p.category === cat && p.subcategory === sub).length;
@@ -996,7 +1065,7 @@
 
                         const subBtn = document.createElement('button');
                         subBtn.onclick = () => filterCategory(cat, sub);
-                        subBtn.className = `w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition ${
+                        subBtn.className = `w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                             isSubActive
                             ? 'bg-primary text-white shadow-sm'
                             : 'text-gray-600 hover:bg-blue-50 hover:text-primary'
@@ -1038,37 +1107,36 @@
                 let badgeHtml = '';
                 if(product.badge) {
                     const badgeBg = product.badge.includes('ลดราคา') ? 'bg-red-500' : 'bg-primary';
-                    badgeHtml = `<div class="absolute top-3 left-3 ${badgeBg} text-white text-xs font-bold px-2 py-1 rounded shadow-sm z-10">${product.badge}</div>`;
+                    badgeHtml = `<div class="absolute top-3 left-3 ${badgeBg} text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm z-10">${product.badge}</div>`;
                 }
 
-                // แสดงหมวดหมู่หลัก และหมวดหมู่ย่อย (ถ้ามี) บนการ์ดสินค้า
                 const catDisplay = product.subcategory 
                     ? `${product.category || 'ทั่วไป'} › ${product.subcategory}` 
                     : (product.category || 'ทั่วไป');
 
                 const cardHtml = `
-                    <div class="bg-white rounded-xl shadow-sm hover:shadow-xl transition-shadow duration-300 overflow-hidden group flex flex-col">
+                    <div class="reveal-card bg-white rounded-2xl shadow-sm border border-gray-100/80 overflow-hidden group flex flex-col">
                         <div class="relative overflow-hidden aspect-[4/3] bg-gray-100">
                             ${badgeHtml}
                             <a href="product.html?id=${product.id}" class="block w-full h-full">
-                                <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500">
+                                <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out">
                             </a>
-                            <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
-                                <button onclick="addToCart(${product.id})" class="pointer-events-auto bg-white text-gray-900 hover:bg-primary hover:text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300" title="เพิ่มลงตะกร้า"><i class="fa-solid fa-cart-plus"></i></button>
-                                <a href="product.html?id=${product.id}" class="pointer-events-auto bg-white text-gray-900 hover:bg-primary hover:text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300 delay-75" title="ดูรายละเอียดสินค้า"><i class="fa-regular fa-eye"></i></a>
+                            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2.5 pointer-events-none">
+                                <button onclick="addToCart(${product.id})" class="pointer-events-auto bg-white text-gray-900 hover:bg-primary hover:text-white active:scale-90 rounded-full w-11 h-11 flex items-center justify-center shadow-lg transition-all transform translate-y-4 group-hover:translate-y-0 duration-300" title="เพิ่มลงตะกร้า"><i class="fa-solid fa-cart-plus"></i></button>
+                                <a href="product.html?id=${product.id}" class="pointer-events-auto bg-white text-gray-900 hover:bg-primary hover:text-white active:scale-90 rounded-full w-11 h-11 flex items-center justify-center shadow-lg transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 delay-75" title="ดูรายละเอียดสินค้า"><i class="fa-regular fa-eye"></i></a>
                             </div>
                         </div>
                         <div class="p-5 flex flex-col flex-grow">
                             <span class="text-xs text-primary font-medium mb-1">${catDisplay}</span>
-                            <a href="product.html?id=${product.id}" class="hover:text-primary transition">
+                            <a href="product.html?id=${product.id}" class="hover:text-primary transition-colors">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1 leading-tight">${product.name}</h3>
                             </a>
                             <div class="flex items-center mb-3">${starsHtml}<span class="text-xs text-gray-500 ml-2">(${product.reviews})</span></div>
                             <div class="mt-auto flex items-center justify-between pt-2">
                                 <div class="flex items-baseline flex-wrap">${priceHtml}</div>
                                 <div class="flex items-center gap-1.5">
-                                    <a href="product.html?id=${product.id}" class="text-xs font-medium text-gray-600 hover:text-primary bg-gray-100 hover:bg-blue-50 px-3 py-2 rounded-full transition">รายละเอียด</a>
-                                    <button onclick="addToCart(${product.id})" class="w-9 h-9 rounded-full bg-primary hover:bg-blue-700 text-white flex items-center justify-center transition-colors flex-shrink-0"><i class="fa-solid fa-plus text-xs"></i></button>
+                                    <a href="product.html?id=${product.id}" class="text-xs font-medium text-gray-600 hover:text-primary bg-gray-100 hover:bg-blue-50 active:scale-95 px-3 py-2 rounded-full transition-all">รายละเอียด</a>
+                                    <button onclick="addToCart(${product.id})" class="w-9 h-9 rounded-full bg-primary hover:bg-blue-700 active:scale-90 text-white flex items-center justify-center shadow-sm transition-all flex-shrink-0"><i class="fa-solid fa-plus text-xs"></i></button>
                                 </div>
                             </div>
                         </div>
@@ -1076,10 +1144,12 @@
                 `;
                 grid.innerHTML += cardHtml;
             });
+
+            initScrollReveal();
         }
 
         // ==========================================
-        // 6. ฟังก์ชันระบบผู้ใช้ (Auth)
+        // 7. ฟังก์ชันระบบผู้ใช้ (Auth)
         // ==========================================
         function openAuthModal(tab = 'login') {
             switchAuthTab(tab);
@@ -1291,7 +1361,7 @@
         }
 
         // ==========================================
-        // 7. ฟังก์ชันตะกร้าสินค้า (Cart - ซิงค์ localStorage)
+        // 8. ฟังก์ชันตะกร้าสินค้า (Cart - ซิงค์ localStorage)
         // ==========================================
         function toggleCart() {
             const sidebar = document.getElementById('cart-sidebar');
@@ -1328,6 +1398,7 @@
             
             saveCartToStorage();
             updateCartUI();
+            triggerCartBounce();
             showToast(`เพิ่ม <b>${product.name}</b> ลงในตะกร้าแล้ว`);
         }
 
@@ -1378,7 +1449,7 @@
                 totalPrice += item.product.price * item.quantity;
                 
                 const itemEl = document.createElement('div');
-                itemEl.className = 'cart-item flex items-center gap-4 bg-white p-3 border rounded-xl shadow-sm';
+                itemEl.className = 'cart-item flex items-center gap-4 bg-white p-3 border rounded-xl shadow-sm transition-all hover:shadow-md';
                 itemEl.innerHTML = `
                     <img src="${item.product.image}" alt="${item.product.name}" class="w-20 h-20 object-cover rounded-lg bg-gray-100">
                     <div class="flex-1 min-w-0">
@@ -1402,7 +1473,7 @@
         }
 
         // ==========================================
-        // 8. ระบบชำระเงินและแจ้งเตือน (Checkout & Payment)
+        // 9. ระบบชำระเงินและแจ้งเตือน (Checkout & Payment)
         // ==========================================
         function checkout() {
             if (cart.length === 0) {
@@ -1527,7 +1598,7 @@
         }
 
         // ==========================================
-        // 9. ฟังก์ชันประวัติการสั่งซื้อ (Order History)
+        // 10. ฟังก์ชันประวัติการสั่งซื้อ (Order History)
         // ==========================================
         function openOrdersModal() {
             if (!currentUser) {
@@ -1624,12 +1695,12 @@
         }
 
         // ==========================================
-        // 10. ฟังก์ชันอื่นๆ และการเริ่มต้นทำงาน
+        // 11. ฟังก์ชันอื่นๆ และการเริ่มต้นทำงาน
         // ==========================================
         function showToast(message, type = "success") {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = `toast-enter flex items-center p-4 mb-2 text-gray-900 bg-white rounded-lg shadow-xl border-l-4 w-full sm:min-w-[300px] sm:w-auto`;
+            toast.className = `toast-enter flex items-center p-4 mb-2 text-gray-900 bg-white rounded-xl shadow-xl border-l-4 w-full sm:min-w-[300px] sm:w-auto`;
             
             if(type === "success") {
                 toast.classList.add('border-green-500');
