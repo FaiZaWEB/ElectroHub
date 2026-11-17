@@ -7,10 +7,11 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const PROMPTPAY_NUMBER = "0623910008";
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1570114848656724109/ZYP72Deasv9zoUB-vdhG8ixueTXdWzmXV2FKWZ1IIyo3QMVIpgh3_udCftm-nuzyxrAY";
+const SLIP_BUCKET_NAME = "slips"; // ชื่อ Bucket ใน Supabase Storage
 
 // สถานะกลาง (แชร์ข้อมูลตะกร้าร่วมกันทุกหน้าผ่าน localStorage)
 let cart = JSON.parse(localStorage.getItem('electrohub_cart')) || [];
-let appliedCoupon = JSON.parse(localStorage.getItem('electrohub_coupon')) || null; // เก็บคูปองที่กำลังใช้งาน
+let appliedCoupon = JSON.parse(localStorage.getItem('electrohub_coupon')) || null;
 let currentUser = null;
 let isCartOpen = false;
 let currentPendingOrder = null;
@@ -100,7 +101,6 @@ async function applyCartCoupon() {
         return;
     }
 
-    // ดึงรายการคูปองที่ผู้ใช้แลกไว้จาก Supabase User Metadata
     const { data: { user: fullUser }, error } = await supabaseClient.auth.getUser();
     if (error || !fullUser) {
         showToast("ไม่สามารถตรวจสอบคูปองได้ กรุณาลองใหม่", "error");
@@ -120,7 +120,6 @@ async function applyCartCoupon() {
         return;
     }
 
-    // เช็กยอดสั่งซื้อขั้นต่ำ (ถ้ามี)
     const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
     if (matchedCoupon.code.startsWith('HUB100') && subtotal < 1000) {
         showToast("คูปองนี้ใช้ได้เมื่อสั่งซื้อครบ ฿1,000 ขึ้นไป", "error");
@@ -180,7 +179,19 @@ function toggleCart() {
 
 function addItemToSharedCart(productObj, openSidebar = false) {
     if (!productObj) return;
+    if (productObj.stock !== undefined && productObj.stock <= 0) {
+        showToast(`ขออภัย สินค้า <b>${productObj.name}</b> หมดชั่วคราว`, "error");
+        return;
+    }
+
     const existingItem = cart.find(item => item.product.id === productObj.id && item.product.price === productObj.price);
+    const currentQtyInCart = existingItem ? existingItem.quantity : 0;
+
+    if (productObj.stock !== undefined && currentQtyInCart + 1 > productObj.stock) {
+        showToast(`สินค้า <b>${productObj.name}</b> มีในสต็อกเพียง ${productObj.stock} ชิ้น`, "error");
+        return;
+    }
+
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
@@ -210,6 +221,12 @@ function removeFromCart(index) {
 function updateQuantity(index, delta) {
     const item = cart[index];
     if (!item) return;
+
+    if (delta > 0 && item.product.stock !== undefined && item.quantity + delta > item.product.stock) {
+        showToast(`สินค้านี้มีในสต็อกสูงสุด ${item.product.stock} ชิ้น`, "error");
+        return;
+    }
+
     item.quantity += delta;
     if (item.quantity <= 0) {
         removeFromCart(index);
@@ -225,7 +242,6 @@ function updateCartUI() {
     const cartCount = document.getElementById('cart-count');
     const cartTotal = document.getElementById('cart-total');
 
-    // ส่วนแสดงผลคูปองและส่วนลดในตะกร้า
     const discountRow = document.getElementById('cart-discount-row');
     const discountAmountEl = document.getElementById('cart-discount-amount');
     const appliedCouponBadge = document.getElementById('applied-coupon-badge');
@@ -273,7 +289,6 @@ function updateCartUI() {
         container.appendChild(itemEl);
     });
 
-    // คำนวณส่วนลดจากคูปอง (ไม่ให้ยอดสุทธิติดลบ)
     let discountValue = 0;
     if (appliedCoupon) {
         discountValue = Math.min(subtotalPrice, appliedCoupon.discountValue);
@@ -293,9 +308,122 @@ function updateCartUI() {
 }
 
 // ==========================================
-// 5. ระบบชำระเงิน PromptPay QR และตัดสิทธิ์คูปอง
+// 5. ระบบตรวจสอบสต็อก และตัดสต็อกอัตโนมัติ (Auto Stock Deduction)
 // ==========================================
-function checkout() {
+async function validateStockBeforeCheckout(itemsToCheck) {
+    const requiredByProductId = {};
+    itemsToCheck.forEach(item => {
+        if (item.id === 'COUPON') return;
+        requiredByProductId[item.id] = (requiredByProductId[item.id] || 0) + item.quantity;
+    });
+
+    const productIds = Object.keys(requiredByProductId).map(Number);
+    if (productIds.length === 0) return { ok: true };
+
+    const { data: dbProducts, error } = await supabaseClient
+        .from('products')
+        .select('id, name, stock')
+        .in('id', productIds);
+
+    if (error) {
+        return { ok: false, message: "ไม่สามารถตรวจสอบสต็อกสินค้าได้: " + error.message };
+    }
+
+    for (const id of productIds) {
+        const dbItem = dbProducts.find(p => p.id === id);
+        const neededQty = requiredByProductId[id];
+
+        if (!dbItem) {
+            return { ok: false, message: `ไม่พบสินค้าบางรายการในระบบ` };
+        }
+        if ((dbItem.stock ?? 0) < neededQty) {
+            return {
+                ok: false,
+                message: `สินค้า "${dbItem.name}" มีสต็อกเหลือเพียง ${dbItem.stock ?? 0} ชิ้น (ไม่พอสำหรับ ${neededQty} ชิ้น)`
+            };
+        }
+    }
+
+    return { ok: true, dbProducts };
+}
+
+async function deductProductStocks(orderedItems) {
+    const deductMap = {};
+    orderedItems.forEach(item => {
+        if (item.id === 'COUPON') return;
+        deductMap[item.id] = (deductMap[item.id] || 0) + item.quantity;
+    });
+
+    const productIds = Object.keys(deductMap).map(Number);
+    if (productIds.length === 0) return;
+
+    const { data: latestProducts, error } = await supabaseClient
+        .from('products')
+        .select('id, stock')
+        .in('id', productIds);
+
+    if (error || !latestProducts) {
+        console.error("Failed to fetch latest stocks for deduction:", error);
+        return;
+    }
+
+    await Promise.all(latestProducts.map(async (prod) => {
+        const currentStock = Number(prod.stock ?? 0);
+        const purchasedQty = Number(deductMap[prod.id] || 0);
+        const newStock = Math.max(0, currentStock - purchasedQty);
+
+        const { error: updateErr } = await supabaseClient
+            .from('products')
+            .update({ stock: newStock })
+            .eq('id', prod.id);
+
+        if (updateErr) {
+            console.error(`Error updating stock for product #${prod.id}:`, updateErr);
+        }
+    }));
+}
+
+// ==========================================
+// 6. ระบบอัปโหลดสลิปขึ้น Supabase Storage จริง
+// ==========================================
+async function uploadPaymentSlipToStorage(file) {
+    if (!file) return null;
+
+    // ตรวจสอบประเภทไฟล์และขนาด (ไม่เกิน 5MB)
+    if (!file.type.startsWith('image/')) {
+        throw new Error("กรุณาเลือกไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น");
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        throw new Error("ขนาดไฟล์สลิปต้องไม่เกิน 5MB");
+    }
+
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const safeUserId = currentUser?.id ? currentUser.id.slice(0, 8) : 'guest';
+    const fileName = `slip_${safeUserId}_${Date.now()}.${fileExt}`;
+
+    const { data, error } = await supabaseClient.storage
+        .from(SLIP_BUCKET_NAME)
+        .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+        });
+
+    if (error) {
+        throw new Error(`อัปโหลดสลิปไม่สำเร็จ: ${error.message}`);
+    }
+
+    // ดึง Public URL ของสลิปที่อัปโหลดแล้ว
+    const { data: publicUrlData } = supabaseClient.storage
+        .from(SLIP_BUCKET_NAME)
+        .getPublicUrl(fileName);
+
+    return publicUrlData?.publicUrl || null;
+}
+
+// ==========================================
+// 7. ระบบชำระเงิน PromptPay QR, ตัดคูปอง และตัดสต็อก
+// ==========================================
+async function checkout() {
     if (cart.length === 0) {
         showToast("ตะกร้าสินค้าว่างเปล่า กรุณาเลือกสินค้าก่อน", "error");
         return;
@@ -308,6 +436,18 @@ function checkout() {
         } else {
             setTimeout(() => { window.location.href = "./index.html"; }, 1200);
         }
+        return;
+    }
+
+    const itemsToValidate = cart.map(item => ({
+        id: item.product.id,
+        name: item.product.name,
+        quantity: item.quantity
+    }));
+
+    const stockCheck = await validateStockBeforeCheckout(itemsToValidate);
+    if (!stockCheck.ok) {
+        showToast(stockCheck.message, "error");
         return;
     }
 
@@ -324,9 +464,7 @@ function checkout() {
 
     if (qrImg) qrImg.src = qrUrl;
     if (numDisplay) numDisplay.innerText = `พร้อมเพย์: ${PROMPTPAY_NUMBER}`;
-    if (amountDisplay) {
-        amountDisplay.innerText = formatPrice(finalPrice);
-    }
+    if (amountDisplay) amountDisplay.innerText = formatPrice(finalPrice);
 
     const orderItemsList = cart.map(item => ({
         id: item.product.id,
@@ -336,7 +474,6 @@ function checkout() {
         image: item.product.image
     }));
 
-    // ถ้ามีการใช้คูปองส่วนลด ให้บันทึกเป็นรายการส่วนลดท้ายบิลด้วย
     if (appliedCoupon && discountValue > 0) {
         orderItemsList.push({
             id: 'COUPON',
@@ -369,12 +506,33 @@ async function submitPaymentWithSlip() {
     const btn = document.getElementById('confirm-payment-btn');
     if (btn && btn.disabled) return;
 
+    const slipInput = document.getElementById('slip-file-input');
+    const slipFile = slipInput?.files?.[0] || null;
+
+    // บังคับแนบสลิปโอนเงินก่อนกดยืนยัน
+    if (!slipFile) {
+        showToast("กรุณาแนบรูปสลิปการโอนเงินก่อนยืนยันการชำระเงิน", "error");
+        return;
+    }
+
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังบันทึกออเดอร์...';
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังอัปโหลดสลิปและบันทึกออเดอร์...';
     }
 
     try {
+        // 1. ตรวจสอบสต็อกอีกครั้งก่อนตัดยอดจริง
+        const stockCheck = await validateStockBeforeCheckout(currentPendingOrder.items);
+        if (!stockCheck.ok) {
+            showToast(stockCheck.message, "error");
+            closePaymentModal();
+            return;
+        }
+
+        // 2. อัปโหลดรูปสลิปขึ้น Supabase Storage จริง
+        const uploadedSlipUrl = await uploadPaymentSlipToStorage(slipFile);
+
+        // 3. บันทึกคำสั่งซื้อพร้อมลิงก์รูปสลิปลงตาราง orders
         const { data: orderData, error: orderError } = await supabaseClient
             .from('orders')
             .insert([{
@@ -384,13 +542,16 @@ async function submitPaymentWithSlip() {
                 items: currentPendingOrder.items,
                 status: 'ชำระเงินแล้ว',
                 payment_method: 'PromptPay QR',
-                slip_url: null
+                slip_url: uploadedSlipUrl
             }])
             .select();
 
         if (orderError) throw orderError;
 
-        // ถ้ามีการใช้คูปองส่วนลด ให้อัปเดตสถานะคูปองใบนั้นเป็น "used: true" ในบัญชีลูกค้า
+        // 4. ตัดสต็อกสินค้าในตาราง products อัตโนมัติทันที
+        await deductProductStocks(currentPendingOrder.items);
+
+        // 5. ตัดสิทธิ์คูปองส่วนลด (ถ้ามีการใช้งาน)
         if (currentPendingOrder.couponUsed) {
             const { data: { user: fullUser } } = await supabaseClient.auth.getUser();
             const userCoupons = fullUser?.user_metadata?.redeemed_coupons || [];
@@ -402,9 +563,11 @@ async function submitPaymentWithSlip() {
             await supabaseClient.auth.updateUser({ data: { redeemed_coupons: updatedCoupons } });
         }
 
+        // 6. ส่งแจ้งเตือนพร้อมรูปสลิปเข้า Discord
         const newOrderId = orderData[0]?.id || 'N/A';
-        await sendDiscordOrderNotification(newOrderId, currentUser.email, currentPendingOrder.totalPrice, currentPendingOrder.items);
+        await sendDiscordOrderNotification(newOrderId, currentUser.email, currentPendingOrder.totalPrice, currentPendingOrder.items, uploadedSlipUrl);
 
+        // 7. ล้างตะกร้าและคูปอง
         cart = [];
         appliedCoupon = null;
         saveCartToStorage();
@@ -413,10 +576,14 @@ async function submitPaymentWithSlip() {
         closePaymentModal();
         currentPendingOrder = null;
 
-        showToast("ชำระเงินและบันทึกคำสั่งซื้อเรียบร้อยแล้ว!", "success");
+        if (typeof fetchProductsFromSupabase === 'function') {
+            fetchProductsFromSupabase();
+        }
+
+        showToast("อัปโหลดสลิปและบันทึกคำสั่งซื้อเรียบร้อยแล้ว!", "success");
     } catch (err) {
         console.error("Order submission error:", err);
-        showToast("เกิดข้อผิดพลาดในการบันทึกออเดอร์: " + err.message, "error");
+        showToast(err.message || "เกิดข้อผิดพลาดในการบันทึกออเดอร์", "error");
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -425,9 +592,28 @@ async function submitPaymentWithSlip() {
     }
 }
 
-async function sendDiscordOrderNotification(orderId, userEmail, totalAmount, items) {
+async function sendDiscordOrderNotification(orderId, userEmail, totalAmount, items, slipUrl = null) {
     if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL === "YOUR_DISCORD_WEBHOOK_URL_HERE") return;
     const itemListStr = items.map(i => `• **${i.name}** (x${i.quantity}) - ฿${(i.price * i.quantity).toLocaleString()}`).join('\n');
+
+    const embedObj = {
+        title: `🛒 มีคำสั่งซื้อใหม่เข้ามา! (ออเดอร์ #${orderId})`,
+        color: 0x2563eb,
+        fields: [
+            { name: "👤 ผู้สั่งซื้อ", value: userEmail, inline: true },
+            { name: "💳 ช่องทางชำระเงิน", value: "PromptPay QR Code", inline: true },
+            { name: "💰 ยอดรวมสุทธิ", value: `**฿${totalAmount.toLocaleString()}**`, inline: false },
+            { name: "📦 รายการสินค้า (ตัดสต็อกแล้ว)", value: itemListStr || "ไม่มีข้อมูล", inline: false }
+        ],
+        footer: { text: "ElectroHub E-Commerce Notification System" },
+        timestamp: new Date().toISOString()
+    };
+
+    // แนบรูปภาพสลิปเข้า Embed ของ Discord โดยตรง
+    if (slipUrl) {
+        embedObj.fields.push({ name: "🧾 หลักฐานสลิปโอนเงิน", value: `[คลิกเพื่อเปิดดูรูปสลิปขนาดเต็ม](${slipUrl})`, inline: false });
+        embedObj.image = { url: slipUrl };
+    }
 
     try {
         await fetch(DISCORD_WEBHOOK_URL, {
@@ -436,18 +622,7 @@ async function sendDiscordOrderNotification(orderId, userEmail, totalAmount, ite
             body: JSON.stringify({
                 username: "ElectroHub Bot",
                 avatar_url: "https://cdn-icons-png.flaticon.com/512/891/891462.png",
-                embeds: [{
-                    title: `🛒 มีคำสั่งซื้อใหม่เข้ามา! (ออเดอร์ #${orderId})`,
-                    color: 0x2563eb,
-                    fields: [
-                        { name: "👤 ผู้สั่งซื้อ", value: userEmail, inline: true },
-                        { name: "💳 ช่องทางชำระเงิน", value: "PromptPay QR Code", inline: true },
-                        { name: "💰 ยอดรวมสุทธิ", value: `**฿${totalAmount.toLocaleString()}**`, inline: false },
-                        { name: "📦 รายการสินค้า", value: itemListStr || "ไม่มีข้อมูล", inline: false }
-                    ],
-                    footer: { text: "ElectroHub E-Commerce Notification System" },
-                    timestamp: new Date().toISOString()
-                }]
+                embeds: [embedObj]
             })
         });
     } catch (err) {
@@ -456,7 +631,7 @@ async function sendDiscordOrderNotification(orderId, userEmail, totalAmount, ite
 }
 
 // ==========================================
-// 6. ระบบแจ้งเตือน Toast และซิงค์ตะกร้าอัตโนมัติ
+// 8. ระบบแจ้งเตือน Toast และซิงค์ตะกร้าอัตโนมัติ
 // ==========================================
 function showToast(message, type = "success") {
     const container = document.getElementById('toast-container');
