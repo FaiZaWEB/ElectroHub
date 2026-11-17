@@ -623,16 +623,20 @@
         const PROMPTPAY_NUMBER = "0623910008"; 
         const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1570114848656724109/ZYP72Deasv9zoUB-vdhG8ixueTXdWzmXV2FKWZ1IIyo3QMVIpgh3_udCftm-nuzyxrAY"; 
 
-        // State Variables
+        // State Variables & Shared Cart (ซิงค์กับ product.html ผ่าน localStorage)
         let products = [];
         let flashSaleProducts = [];
-        let cart = [];
+        let cart = JSON.parse(localStorage.getItem('electrohub_cart')) || [];
         let isCartOpen = false;
         let isCategoryOpen = false;
         let currentUser = null;
         let activeCategory = 'all';
         let pendingEmailForOTP = '';
         let currentPendingOrder = null;
+
+        const saveCartToStorage = () => {
+            localStorage.setItem('electrohub_cart', JSON.stringify(cart));
+        };
 
         // Format Currency
         const formatPrice = (price) => {
@@ -763,6 +767,7 @@
                 cart.push({ product: promoProductObj, quantity: 1 });
             }
 
+            saveCartToStorage();
             updateCartUI();
             showToast(`เพิ่ม <b>${fsItem.name}</b> (ลด ${fsItem.discountPercent}%) ลงตะกร้าแล้ว!`, "success");
         }
@@ -1204,7 +1209,7 @@
         }
 
         // ==========================================
-        // 7. ฟังก์ชันตะกร้าสินค้า (Cart)
+        // 7. ฟังก์ชันตะกร้าสินค้า (Cart - ซิงค์ localStorage)
         // ==========================================
         function toggleCart() {
             const sidebar = document.getElementById('cart-sidebar');
@@ -1239,12 +1244,14 @@
                 cart.push({ product: product, quantity: 1 });
             }
             
+            saveCartToStorage();
             updateCartUI();
             showToast(`เพิ่ม <b>${product.name}</b> ลงในตะกร้าแล้ว`);
         }
 
         function removeFromCart(index) {
             cart.splice(index, 1);
+            saveCartToStorage();
             updateCartUI();
         }
 
@@ -1255,6 +1262,7 @@
                 if (item.quantity <= 0) {
                     removeFromCart(index);
                 } else {
+                    saveCartToStorage();
                     updateCartUI();
                 }
             }
@@ -1385,6 +1393,7 @@
                 await sendDiscordNotification(newOrderId, currentUser.email, currentPendingOrder.totalPrice, currentPendingOrder.items);
 
                 cart = [];
+                saveCartToStorage();
                 updateCartUI();
                 closePaymentModal();
                 currentPendingOrder = null;
@@ -1586,6 +1595,12 @@
                 showToast("ไม่สามารถโหลดรายการสินค้าได้: " + err.message, "error");
             }
         }
+
+        // ซิงค์ตะกร้าอัตโนมัติทันทีเมื่อผู้ใช้กดปุ่ม Back หรือสลับกลับมาหน้านี้
+        window.addEventListener('pageshow', () => {
+            cart = JSON.parse(localStorage.getItem('electrohub_cart')) || [];
+            updateCartUI();
+        });
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
