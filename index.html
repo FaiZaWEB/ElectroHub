@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Supabase JS Client SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- เรียกใช้ไฟล์ระบบกลาง app.js -->
+    <script src="./app.js"></script>
     
     <script>
         tailwind.config = {
@@ -131,12 +133,13 @@
                                 <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
                             </button>
 
-                            <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 hidden border border-gray-100 origin-top-right transition-all">
-                                <a href="./profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary transition flex items-center"><i class="fa-regular fa-id-card mr-2 text-gray-400"></i> โปรไฟล์ของฉัน</a>
-                                <a href="./admin.html" class="block px-4 py-2 text-sm text-amber-600 font-semibold hover:bg-amber-50 transition flex items-center"><i class="fa-solid fa-shield-halved mr-2"></i> จัดการหลังบ้าน (Admin)</a>
-                                <a href="#" onclick="openOrdersModal()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary transition flex items-center"><i class="fa-solid fa-box mr-2 text-gray-400"></i> ประวัติการสั่งซื้อ</a>
+                            <div id="user-dropdown" class="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl py-2 z-50 hidden border border-gray-100 origin-top-right transition-all">
+                                <a href="./profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary transition flex items-center"><i class="fa-regular fa-id-card mr-2 text-gray-400 w-4"></i> โปรไฟล์ของฉัน</a>
+                                <a href="./rewards.html" class="block px-4 py-2 text-sm text-amber-600 font-medium hover:bg-amber-50 transition flex items-center"><i class="fa-solid fa-crown mr-2 text-amber-500 w-4"></i> คะแนนสะสม & แลกสิทธิ์</a>
+                                <a href="./admin.html" class="block px-4 py-2 text-sm text-slate-700 font-semibold hover:bg-gray-100 transition flex items-center"><i class="fa-solid fa-shield-halved mr-2 text-primary w-4"></i> จัดการหลังบ้าน (Admin)</a>
+                                <a href="#" onclick="openOrdersModal()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary transition flex items-center"><i class="fa-solid fa-box mr-2 text-gray-400 w-4"></i> ประวัติการสั่งซื้อ</a>
                                 <hr class="my-1 border-gray-100">
-                                <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition flex items-center"><i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> ออกจากระบบ</button>
+                                <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition flex items-center"><i class="fa-solid fa-arrow-right-from-bracket mr-2 w-4"></i> ออกจากระบบ</button>
                             </div>
                         </div>
                     </div>
@@ -238,7 +241,7 @@
                     </p>
                 </div>
 
-                <!-- Countdown Timer (นับถอยหลังจนถึงต้นชั่วโมงถัดไป) -->
+                <!-- Countdown Timer -->
                 <div class="animate-hero-2 bg-slate-900/80 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/10 text-center shadow-xl">
                     <p class="text-xs text-gray-300 mb-2 font-medium">สิ้นสุดโปรโมชั่นรอบนี้ในอีก</p>
                     <div class="flex items-center space-x-2 sm:space-x-3 text-white font-mono">
@@ -402,6 +405,11 @@
                             </span>
                             <span class="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full">ลด 5-15%</span>
                         </button>
+                        <a href="./rewards.html" class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium text-amber-800 hover:bg-amber-50 transition">
+                            <span class="flex items-center">
+                                <i class="fa-solid fa-crown mr-3 text-amber-500 w-4 text-center"></i> คะแนนสะสม & แลกสิทธิ์
+                            </span>
+                        </a>
                         <button onclick="switchPage('contact'); toggleCategoryDrawer();" class="w-full flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-primary transition">
                             <i class="fa-solid fa-headset mr-3 text-gray-400 w-4 text-center"></i> ติดต่อเรา
                         </button>
@@ -433,15 +441,15 @@
                         <li><button onclick="switchPage('home')" class="hover:text-primary transition">หน้าแรก / สินค้าทั้งหมด</button></li>
                         <li><button onclick="toggleCategoryDrawer()" class="hover:text-primary transition">หมวดหมู่สินค้า</button></li>
                         <li><button onclick="switchPage('promo')" class="hover:text-amber-400 transition text-amber-300"><i class="fa-solid fa-bolt mr-1"></i> โปรโมชั่น Flash Sale</button></li>
-                        <li><button onclick="switchPage('contact')" class="hover:text-primary transition">ติดต่อเรา</button></li>
+                        <li><a href="./rewards.html" class="hover:text-amber-400 transition"><i class="fa-solid fa-crown mr-1 text-amber-400"></i> สะสมคะแนนแลกคูปอง</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="text-white font-semibold mb-4">ช่วยเหลือ</h3>
+                    <h3 class="text-white font-semibold mb-4">บัญชีสมาชิก</h3>
                     <ul class="space-y-2 text-sm">
-                        <li><button onclick="switchPage('contact')" class="hover:text-primary transition">การจัดส่งสินค้า</button></li>
-                        <li><button onclick="switchPage('contact')" class="hover:text-primary transition">นโยบายการคืนสินค้า</button></li>
-                        <li><button onclick="switchPage('contact')" class="hover:text-primary transition">แจ้งปัญหา / เคลมสินค้า</button></li>
+                        <li><a href="./profile.html" class="hover:text-primary transition">ข้อมูลส่วนตัวและที่อยู่จัดส่ง</a></li>
+                        <li><button onclick="openOrdersModal()" class="hover:text-primary transition">ประวัติการสั่งซื้อ</button></li>
+                        <li><button onclick="switchPage('contact')" class="hover:text-primary transition">ติดต่อเรา / แจ้งปัญหา</button></li>
                     </ul>
                 </div>
                 <div>
@@ -460,7 +468,7 @@
         </div>
     </footer>
 
-    <!-- Shopping Cart Sidebar -->
+    <!-- Shopping Cart Sidebar (รองรับช่องกรอกคูปองส่วนลดร่วมกับ app.js) -->
     <div id="cart-sidebar" class="fixed inset-0 z-50 invisible">
         <div id="cart-backdrop" class="absolute inset-0 bg-black/50 backdrop-blur-xs opacity-0 transition-opacity duration-300" onclick="toggleCart()"></div>
         <div id="cart-panel" class="absolute inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-out flex flex-col">
@@ -479,12 +487,37 @@
                 </div>
             </div>
 
-            <div class="border-t p-6 bg-gray-50">
-                <div class="flex justify-between text-base font-medium text-gray-900 mb-4">
-                    <p>ยอดรวมทั้งสิ้น</p>
-                    <p id="cart-total">฿0</p>
+            <!-- ส่วนสรุปยอดและกรอกโค้ดส่วนลด (เชื่อมกับ app.js) -->
+            <div class="border-t p-6 bg-gray-50 space-y-3">
+                <div>
+                    <div id="coupon-input-group" class="flex gap-2">
+                        <div class="relative flex-1">
+                            <i class="fa-solid fa-ticket absolute left-3 top-2.5 text-amber-500 text-xs"></i>
+                            <input type="text" id="cart-coupon-input" placeholder="กรอกโค้ดส่วนลด (เช่น HUB100-XXXX)" class="w-full pl-8 pr-3 py-2 bg-white border border-gray-300 rounded-xl text-xs uppercase focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <button type="button" onclick="applyCartCoupon()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap">
+                            ใช้โค้ด
+                        </button>
+                    </div>
+
+                    <div id="applied-coupon-badge" class="hidden flex items-center justify-between bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-xl text-xs">
+                        <span class="font-semibold flex items-center">
+                            <i class="fa-solid fa-circle-check mr-1.5"></i> <span id="applied-coupon-text">HUB100 (-฿100)</span>
+                        </span>
+                        <button type="button" onclick="removeCartCoupon()" class="text-red-500 hover:text-red-700 font-bold ml-2">ลบ</button>
+                    </div>
                 </div>
-                <p class="text-sm text-gray-500 mb-6">ราคานี้รวมภาษีมูลค่าเพิ่มแล้ว จัดส่งฟรี</p>
+
+                <div id="cart-discount-row" class="hidden flex justify-between text-sm font-medium text-green-600">
+                    <p>ส่วนลดคูปอง</p>
+                    <p id="cart-discount-amount">-฿0</p>
+                </div>
+
+                <div class="flex justify-between text-base font-bold text-gray-900 pt-1">
+                    <p>ยอดรวมสุทธิ</p>
+                    <p id="cart-total" class="text-primary text-lg">฿0</p>
+                </div>
+                <p class="text-xs text-gray-500">ราคานี้รวมภาษีมูลค่าเพิ่มแล้ว จัดส่งฟรี</p>
                 <button onclick="checkout()" class="w-full bg-primary hover:bg-blue-700 active:scale-95 text-white font-medium py-3 px-4 rounded-xl shadow-md transition-all flex justify-center items-center">
                     ดำเนินการชำระเงิน <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
@@ -613,7 +646,7 @@
         </div>
     </div>
 
-    <!-- Payment Modal (PromptPay QR Code) -->
+    <!-- Payment Modal (PromptPay QR Code - ใช้ร่วมกับ app.js) -->
     <div id="payment-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closePaymentModal()"></div>
         
@@ -652,41 +685,19 @@
         </div>
     </div>
 
-    <!-- JavaScript Logic -->
+    <!-- JavaScript เฉพาะหน้าแรก (เรียกใช้ supabaseClient, cart, addItemToSharedCart จาก app.js) -->
     <script>
-        // ==========================================
-        // 1. ตั้งค่าการเชื่อมต่อ API และตัวแปรระบบ
-        // ==========================================
-        const SUPABASE_URL = 'https://zlpxxwauxgwsvvukfqmx.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'sb_publishable_mTmE2KIwTN0vsM7nDlePTg_rHJwCaNn';                 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        const PROMPTPAY_NUMBER = "0623910008"; 
-        const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1570114848656724109/ZYP72Deasv9zoUB-vdhG8ixueTXdWzmXV2FKWZ1IIyo3QMVIpgh3_udCftm-nuzyxrAY"; 
-
         let products = [];
         let flashSaleProducts = [];
-        let cart = JSON.parse(localStorage.getItem('electrohub_cart')) || [];
-        let isCartOpen = false;
         let isCategoryOpen = false;
-        let currentUser = null;
         let activeCategory = 'all';
         let activeSubcategory = 'all';
         let expandedCategory = null;
         let pendingEmailForOTP = '';
-        let currentPendingOrder = null;
         let lastFlashSaleHour = Math.floor(Date.now() / (1000 * 60 * 60));
 
-        const saveCartToStorage = () => {
-            localStorage.setItem('electrohub_cart', JSON.stringify(cart));
-        };
-
-        const formatPrice = (price) => {
-            return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(price);
-        };
-
         // ==========================================
-        // 2. ระบบ Scroll Reveal Animation
+        // 1. ระบบ Scroll Reveal Animation
         // ==========================================
         function initScrollReveal() {
             const observer = new IntersectionObserver((entries) => {
@@ -704,16 +715,8 @@
             });
         }
 
-        function triggerCartBounce() {
-            const cartBtn = document.getElementById('cart-nav-btn');
-            if (!cartBtn) return;
-            cartBtn.classList.remove('cart-bounce');
-            void cartBtn.offsetWidth;
-            cartBtn.classList.add('cart-bounce');
-        }
-
         // ==========================================
-        // 3. ระบบสลับหน้าเว็บ (Home / Flash Sale / Contact)
+        // 2. ระบบสลับหน้าเว็บ (Home / Flash Sale / Contact)
         // ==========================================
         function switchPage(pageName) {
             document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
@@ -735,7 +738,7 @@
         }
 
         // ==========================================
-        // 4. ระบบโปรโมชั่นพิเศษ FLASH SALE (ล็อกเปลี่ยนทุก 1 ชั่วโมง อิงราคาเต็ม)
+        // 3. ระบบโปรโมชั่นพิเศษ FLASH SALE (ล็อกเปลี่ยนทุก 1 ชั่วโมง อิงราคาเต็ม)
         // ==========================================
         function createHourlyRandom(seed) {
             return function() {
@@ -750,7 +753,6 @@
         function setupFlashSale() {
             if (products.length === 0) return;
 
-            // กรองเฉพาะสินค้าที่หน้าเว็บปกติ "ไม่มีส่วนลด" (ไม่มี originalPrice และป้าย badge ไม่มีคำว่าลด)
             const nonDiscountedProducts = products.filter(item => {
                 const hasOriginalPrice = item.originalPrice !== null && item.originalPrice !== undefined && item.originalPrice > item.price;
                 const hasDiscountBadge = item.badge && (item.badge.includes('ลด') || item.badge.includes('%'));
@@ -863,17 +865,7 @@
                 image: fsItem.image
             };
 
-            const existingItem = cart.find(item => item.product.id === productId && item.product.price === fsItem.salePrice);
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                cart.push({ product: promoProductObj, quantity: 1 });
-            }
-
-            saveCartToStorage();
-            updateCartUI();
-            triggerCartBounce();
-            showToast(`เพิ่ม <b>${fsItem.name}</b> (ลด ${fsItem.discountPercent}%) ลงตะกร้าแล้ว!`, "success");
+            addItemToSharedCart(promoProductObj, false);
         }
 
         function startFlashSaleCountdown() {
@@ -908,7 +900,7 @@
         }
 
         // ==========================================
-        // 5. ระบบติดต่อเรา (Contact Us Form + แจ้งเตือน Discord)
+        // 4. ระบบติดต่อเรา (Contact Us Form)
         // ==========================================
         async function handleContactSubmit(event) {
             event.preventDefault();
@@ -925,27 +917,25 @@
 
             try {
                 if (DISCORD_WEBHOOK_URL && DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
-                    const payload = {
-                        username: "ElectroHub Support Bot",
-                        avatar_url: "https://cdn-icons-png.flaticon.com/512/891/891462.png",
-                        embeds: [{
-                            title: `📩 มีข้อความติดต่อใหม่จากหน้าเว็บ!`,
-                            color: 0xf59e0b,
-                            fields: [
-                                { name: "👤 ชื่อผู้ติดต่อ", value: name, inline: true },
-                                { name: "📞 ช่องทางติดต่อกลับ", value: email, inline: true },
-                                { name: "📌 หัวข้อ", value: subject, inline: false },
-                                { name: "💬 รายละเอียดข้อความ", value: message, inline: false }
-                            ],
-                            footer: { text: "ElectroHub Customer Support System" },
-                            timestamp: new Date().toISOString()
-                        }]
-                    };
-
                     await fetch(DISCORD_WEBHOOK_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify({
+                            username: "ElectroHub Support Bot",
+                            avatar_url: "https://cdn-icons-png.flaticon.com/512/891/891462.png",
+                            embeds: [{
+                                title: `📩 มีข้อความติดต่อใหม่จากหน้าเว็บ!`,
+                                color: 0xf59e0b,
+                                fields: [
+                                    { name: "👤 ชื่อผู้ติดต่อ", value: name, inline: true },
+                                    { name: "📞 ช่องทางติดต่อกลับ", value: email, inline: true },
+                                    { name: "📌 หัวข้อ", value: subject, inline: false },
+                                    { name: "💬 รายละเอียดข้อความ", value: message, inline: false }
+                                ],
+                                footer: { text: "ElectroHub Customer Support System" },
+                                timestamp: new Date().toISOString()
+                            }]
+                        })
                     });
                 }
 
@@ -960,7 +950,7 @@
         }
 
         // ==========================================
-        // 6. ฟังก์ชันจัดการสินค้าและเมนูหมวดหมู่ 2 ชั้น (ซ่อน/กางหมวดย่อยได้)
+        // 5. ฟังก์ชันจัดการสินค้าและเมนูหมวดหมู่ 2 ชั้น
         // ==========================================
         function handleSearchInput() {
             if (document.getElementById('page-home').classList.contains('hidden')) {
@@ -1185,8 +1175,14 @@
             initScrollReveal();
         }
 
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            addItemToSharedCart(product, false);
+        }
+
         // ==========================================
-        // 7. ฟังก์ชันระบบผู้ใช้ (Auth)
+        // 6. ฟังก์ชันระบบสมาชิก (Login / Register / OTP)
         // ==========================================
         function openAuthModal(tab = 'login') {
             switchAuthTab(tab);
@@ -1334,7 +1330,7 @@
                     email: user.email,
                     name: user.user_metadata?.display_name || email.split('@')[0]
                 };
-                updateAuthUI();
+                updateSharedAuthUI();
                 closeAuthModal();
                 resetAuthForms();
                 showToast(`ยินดีต้อนรับกลับ, คุณ${currentUser.name}!`, "success");
@@ -1350,45 +1346,11 @@
             try {
                 await supabaseClient.auth.signOut();
                 currentUser = null;
-                updateAuthUI();
+                updateSharedAuthUI();
                 toggleUserDropdown();
                 showToast("ออกจากระบบเรียบร้อยแล้ว");
             } catch (err) {
                 showToast("เกิดข้อผิดพลาดในการออกจากระบบ", "error");
-            }
-        }
-
-        async function checkUserSession() {
-            try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session && session.user) {
-                    const user = session.user;
-                    currentUser = {
-                        id: user.id,
-                        email: user.email,
-                        name: user.user_metadata?.display_name || user.email.split('@')[0]
-                    };
-                    updateAuthUI();
-                }
-            } catch (err) {
-                console.error("Session check error:", err);
-            }
-        }
-
-        function updateAuthUI() {
-            const loginBtn = document.getElementById('login-btn');
-            const userMenu = document.getElementById('user-menu');
-            const userDisplayName = document.getElementById('user-display-name');
-            const userAvatar = document.getElementById('user-avatar');
-
-            if (currentUser) {
-                loginBtn.classList.add('hidden');
-                userMenu.classList.remove('hidden');
-                userDisplayName.innerText = `คุณ${currentUser.name}`;
-                userAvatar.innerText = currentUser.name.charAt(0).toUpperCase();
-            } else {
-                loginBtn.classList.remove('hidden');
-                userMenu.classList.add('hidden');
             }
         }
 
@@ -1398,244 +1360,7 @@
         }
 
         // ==========================================
-        // 8. ฟังก์ชันตะกร้าสินค้า (Cart - ซิงค์ localStorage)
-        // ==========================================
-        function toggleCart() {
-            const sidebar = document.getElementById('cart-sidebar');
-            const backdrop = document.getElementById('cart-backdrop');
-            const panel = document.getElementById('cart-panel');
-
-            isCartOpen = !isCartOpen;
-
-            if (isCartOpen) {
-                sidebar.classList.remove('invisible');
-                setTimeout(() => {
-                    backdrop.classList.remove('opacity-0');
-                    panel.classList.remove('translate-x-full');
-                }, 10);
-            } else {
-                backdrop.classList.add('opacity-0');
-                panel.classList.add('translate-x-full');
-                setTimeout(() => {
-                    sidebar.classList.add('invisible');
-                }, 300);
-            }
-        }
-
-        function addToCart(productId) {
-            const product = products.find(p => p.id === productId);
-            if (!product) return;
-
-            const existingItem = cart.find(item => item.product.id === productId && item.product.price === product.price);
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                cart.push({ product: product, quantity: 1 });
-            }
-            
-            saveCartToStorage();
-            updateCartUI();
-            triggerCartBounce();
-            showToast(`เพิ่ม <b>${product.name}</b> ลงในตะกร้าแล้ว`);
-        }
-
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            saveCartToStorage();
-            updateCartUI();
-        }
-
-        function updateQuantity(index, delta) {
-            const item = cart[index];
-            if (item) {
-                item.quantity += delta;
-                if (item.quantity <= 0) {
-                    removeFromCart(index);
-                } else {
-                    saveCartToStorage();
-                    updateCartUI();
-                }
-            }
-        }
-
-        function updateCartUI() {
-            const container = document.getElementById('cart-items-container');
-            const emptyMsg = document.getElementById('empty-cart-msg');
-            const cartCount = document.getElementById('cart-count');
-            const cartTotal = document.getElementById('cart-total');
-
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            cartCount.innerText = totalItems;
-            
-            if (cart.length === 0) {
-                emptyMsg.style.display = 'flex';
-                const items = container.querySelectorAll('.cart-item');
-                items.forEach(item => item.remove());
-                cartTotal.innerText = '฿0';
-                return;
-            } else {
-                emptyMsg.style.display = 'none';
-            }
-
-            const existingItems = container.querySelectorAll('.cart-item');
-            existingItems.forEach(item => item.remove());
-
-            let totalPrice = 0;
-
-            cart.forEach((item, index) => {
-                totalPrice += item.product.price * item.quantity;
-                
-                const itemEl = document.createElement('div');
-                itemEl.className = 'cart-item flex items-center gap-4 bg-white p-3 border rounded-xl shadow-sm transition-all hover:shadow-md';
-                itemEl.innerHTML = `
-                    <img src="${item.product.image}" alt="${item.product.name}" class="w-20 h-20 object-cover rounded-lg bg-gray-100">
-                    <div class="flex-1 min-w-0">
-                        <h4 class="text-sm font-semibold text-gray-900 truncate">${item.product.name}</h4>
-                        <div class="text-primary font-medium text-sm mt-1">${formatPrice(item.product.price)}</div>
-                        
-                        <div class="flex items-center mt-2 border rounded-lg w-fit">
-                            <button onclick="updateQuantity(${index}, -1)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg transition"><i class="fa-solid fa-minus text-xs"></i></button>
-                            <span class="px-3 text-sm font-medium w-8 text-center">${item.quantity}</span>
-                            <button onclick="updateQuantity(${index}, 1)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-r-lg transition"><i class="fa-solid fa-plus text-xs"></i></button>
-                        </div>
-                    </div>
-                    <button onclick="removeFromCart(${index})" class="text-gray-400 hover:text-red-500 p-2 self-start transition">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                `;
-                container.appendChild(itemEl);
-            });
-
-            cartTotal.innerText = formatPrice(totalPrice);
-        }
-
-        // ==========================================
-        // 9. ระบบชำระเงินและแจ้งเตือน (Checkout & Payment)
-        // ==========================================
-        function checkout() {
-            if (cart.length === 0) {
-                showToast("ตะกร้าสินค้าว่างเปล่า กรุณาเลือกสินค้าก่อน", "error");
-                return;
-            }
-
-            if (!currentUser) {
-                showToast("กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อสินค้า", "error");
-                openAuthModal('login');
-                return;
-            }
-
-            const totalPrice = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-            
-            const qrUrl = `https://promptpay.io/${PROMPTPAY_NUMBER}/${totalPrice}.png`;
-            document.getElementById('promptpay-qr-img').src = qrUrl;
-            document.getElementById('promptpay-num-display').innerText = `พร้อมเพย์: ${PROMPTPAY_NUMBER}`;
-            document.getElementById('payment-amount-display').innerText = formatPrice(totalPrice);
-
-            currentPendingOrder = {
-                totalPrice: totalPrice,
-                items: cart.map(item => ({
-                    id: item.product.id,
-                    name: item.product.name,
-                    price: item.product.price,
-                    quantity: item.quantity,
-                    image: item.product.image
-                }))
-            };
-
-            toggleCart();
-            document.getElementById('payment-modal').classList.remove('hidden');
-        }
-
-        function closePaymentModal() {
-            document.getElementById('payment-modal').classList.add('hidden');
-            document.getElementById('slip-file-input').value = '';
-        }
-
-        async function submitPaymentWithSlip() {
-            if (!currentPendingOrder) return;
-
-            const btn = document.getElementById('confirm-payment-btn');
-            if (btn.disabled) return;
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังบันทึกออเดอร์...';
-
-            try {
-                const { data: orderData, error: orderError } = await supabaseClient
-                    .from('orders')
-                    .insert([
-                        {
-                            user_id: currentUser.id,
-                            user_email: currentUser.email,
-                            total_amount: currentPendingOrder.totalPrice,
-                            items: currentPendingOrder.items,
-                            status: 'ชำระเงินแล้ว',
-                            payment_method: 'PromptPay QR',
-                            slip_url: null
-                        }
-                    ])
-                    .select();
-
-                if (orderError) throw orderError;
-
-                const newOrderId = orderData[0]?.id || 'N/A';
-
-                await sendDiscordNotification(newOrderId, currentUser.email, currentPendingOrder.totalPrice, currentPendingOrder.items);
-
-                cart = [];
-                saveCartToStorage();
-                updateCartUI();
-                closePaymentModal();
-                currentPendingOrder = null;
-
-                showToast("ชำระเงินและบันทึกคำสั่งซื้อเรียบร้อยแล้ว!", "success");
-
-            } catch (err) {
-                console.error("Order submission error:", err);
-                showToast("เกิดข้อผิดพลาดในการบันทึกออเดอร์: " + err.message, "error");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการชำระเงิน';
-            }
-        }
-
-        async function sendDiscordNotification(orderId, userEmail, totalAmount, items) {
-            if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL === "YOUR_DISCORD_WEBHOOK_URL_HERE") return;
-
-            const itemListStr = items.map(i => `• **${i.name}** (x${i.quantity}) - ฿${(i.price * i.quantity).toLocaleString()}`).join('\n');
-
-            const discordPayload = {
-                username: "ElectroHub Bot",
-                avatar_url: "https://cdn-icons-png.flaticon.com/512/891/891462.png",
-                embeds: [
-                    {
-                        title: `🛒 มีคำสั่งซื้อใหม่เข้ามา! (ออเดอร์ #${orderId})`,
-                        color: 0x2563eb,
-                        fields: [
-                            { name: "👤 ผู้สั่งซื้อ", value: userEmail, inline: true },
-                            { name: "💳 ช่องทางชำระเงิน", value: "PromptPay QR Code", inline: true },
-                            { name: "💰 ยอดรวมสุทธิ", value: `**฿${totalAmount.toLocaleString()}**`, inline: false },
-                            { name: "📦 รายการสินค้า", value: itemListStr || "ไม่มีข้อมูล", inline: false }
-                        ],
-                        footer: { text: "ElectroHub E-Commerce Notification System" },
-                        timestamp: new Date().toISOString()
-                    }
-                ]
-            };
-
-            try {
-                await fetch(DISCORD_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(discordPayload)
-                });
-            } catch (err) {
-                console.error("Discord Notification error:", err);
-            }
-        }
-
-        // ==========================================
-        // 10. ฟังก์ชันประวัติการสั่งซื้อ (Order History)
+        // 7. ฟังก์ชันประวัติการสั่งซื้อ (Order History Modal)
         // ==========================================
         function openOrdersModal() {
             if (!currentUser) {
@@ -1732,29 +1457,8 @@
         }
 
         // ==========================================
-        // 11. ฟังก์ชันอื่นๆ และการเริ่มต้นทำงาน
+        // 8. ดึงรายการสินค้าจาก Supabase และเริ่มต้นระบบ
         // ==========================================
-        function showToast(message, type = "success") {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast-enter flex items-center p-4 mb-2 text-gray-900 bg-white rounded-xl shadow-xl border-l-4 w-full sm:min-w-[300px] sm:w-auto`;
-            
-            if(type === "success") {
-                toast.classList.add('border-green-500');
-                toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg mr-3"><i class="fa-solid fa-check"></i></div><div class="text-sm font-medium">${message}</div>`;
-            } else if (type === "error") {
-                toast.classList.add('border-red-500');
-                toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg mr-3"><i class="fa-solid fa-exclamation"></i></div><div class="text-sm font-medium">${message}</div>`;
-            }
-            
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.replace('toast-enter', 'toast-exit');
-                setTimeout(() => { toast.remove(); }, 300);
-            }, 3000);
-        }
-
         async function fetchProductsFromSupabase() {
             try {
                 const { data, error } = await supabaseClient
@@ -1787,13 +1491,6 @@
             }
         }
 
-        // ซิงค์ตะกร้าอัตโนมัติทันทีเมื่อผู้ใช้กดปุ่ม Back หรือสลับกลับมาหน้านี้
-        window.addEventListener('pageshow', () => {
-            cart = JSON.parse(localStorage.getItem('electrohub_cart')) || [];
-            updateCartUI();
-        });
-
-        // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
             fetchProductsFromSupabase();
             updateCartUI();
