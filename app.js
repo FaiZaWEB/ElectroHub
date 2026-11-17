@@ -637,22 +637,25 @@ function showToast(message, type = "success") {
     const container = document.getElementById('toast-container');
     if (!container) return;
 
+    // ดันชั้นของ Toast ให้อยู่เหนือหน้าต่าง Modal ทุกตัว (เช่น หน้าจ่ายเงิน QR)
+    container.style.zIndex = '9999';
+
     const toast = document.createElement('div');
-    toast.className = `toast-enter flex items-center p-4 mb-2 text-gray-900 bg-white rounded-xl shadow-xl border-l-4 w-full sm:min-w-[300px] sm:w-auto`;
+    toast.className = `toast-enter flex items-center p-4 mb-2 text-gray-900 bg-white rounded-xl shadow-2xl border border-gray-200 border-l-4 w-full sm:min-w-[320px] sm:w-auto`;
 
     if (type === "success") {
-        toast.classList.add('border-green-500');
-        toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg mr-3"><i class="fa-solid fa-check"></i></div><div class="text-sm font-medium">${message}</div>`;
+        toast.classList.add('border-l-green-500');
+        toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-600 bg-green-100 rounded-lg mr-3"><i class="fa-solid fa-check"></i></div><div class="text-sm font-semibold text-gray-800">${message}</div>`;
     } else {
-        toast.classList.add('border-red-500');
-        toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg mr-3"><i class="fa-solid fa-exclamation"></i></div><div class="text-sm font-medium">${message}</div>`;
+        toast.classList.add('border-l-red-500');
+        toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-600 bg-red-100 rounded-lg mr-3"><i class="fa-solid fa-exclamation"></i></div><div class="text-sm font-semibold text-gray-800">${message}</div>`;
     }
 
     container.appendChild(toast);
     setTimeout(() => {
         toast.classList.replace('toast-enter', 'toast-exit');
         setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    }, 3500);
 }
 
 window.addEventListener('pageshow', () => {
