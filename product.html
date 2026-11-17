@@ -23,6 +23,15 @@
             }
         }
     </script>
+    <style>
+        .cart-scroll::-webkit-scrollbar { width: 6px; }
+        .cart-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .cart-scroll::-webkit-scrollbar-thumb { background: #b8b8b8; border-radius: 10px; }
+        @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        .toast-enter { animation: slideInUp 0.3s ease-out forwards; }
+        .toast-exit { animation: fadeOut 0.3s ease-out forwards; }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans flex flex-col min-h-screen overflow-x-hidden w-full">
 
@@ -36,10 +45,27 @@
                     <span class="font-bold text-xl sm:text-2xl tracking-tight text-secondary">Electro<span class="text-primary">Hub</span></span>
                 </a>
                 
-                <!-- ปุ่มย้อนกลับ -->
-                <a href="index.html" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-full text-sm transition flex items-center">
-                    <i class="fa-solid fa-arrow-left mr-2"></i> กลับหน้าร้านค้า
-                </a>
+                <!-- Right Actions: User Status, Cart & Back -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <!-- แสดงสถานะผู้ใช้ -->
+                    <div id="user-badge" class="hidden sm:flex items-center bg-blue-50 text-primary text-xs font-medium px-3 py-1.5 rounded-full">
+                        <i class="fa-solid fa-user-check mr-1.5"></i> <span id="user-name-label">สมาชิก</span>
+                    </div>
+                    <a id="login-link-btn" href="index.html" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-3 py-2 rounded-full text-xs sm:text-sm transition">
+                        เข้าสู่ระบบ
+                    </a>
+
+                    <!-- ปุ่มเปิดตะกร้าสินค้า -->
+                    <button onclick="toggleCart()" class="relative p-2 text-gray-600 hover:text-primary transition focus:outline-none">
+                        <i class="fa-solid fa-cart-shopping text-xl"></i>
+                        <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full">0</span>
+                    </button>
+
+                    <!-- ปุ่มย้อนกลับ -->
+                    <a href="index.html" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition flex items-center">
+                        <i class="fa-solid fa-arrow-left sm:mr-2"></i> <span class="hidden sm:inline">หน้าร้าน</span>
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
@@ -61,7 +87,7 @@
             <p class="text-gray-500">กำลังโหลดข้อมูลรายละเอียดสินค้า...</p>
         </div>
 
-        <!-- Product Detail Container (ซ่อนไว้จนกว่าจะโหลดเสร็จ) -->
+        <!-- Product Detail Container -->
         <div id="product-detail-card" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 sm:p-10">
                 <!-- รูปภาพสินค้า -->
@@ -102,24 +128,90 @@
                     <!-- ตารางสเปกสินค้า -->
                     <div class="mb-8">
                         <h3 class="text-sm font-bold text-gray-900 mb-2">ข้อมูลจำเพาะ / สเปก (Specifications)</h3>
-                        <div id="detail-specs-container" class="bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm space-y-2">
-                            <!-- รายการสเปกจะถูกแสดงที่นี่ -->
-                        </div>
+                        <div id="detail-specs-container" class="bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm space-y-2"></div>
                     </div>
 
-                    <!-- ปุ่มดำเนินการ -->
+                    <!-- ปุ่มหยิบใส่ตะกร้า และ ปุ่มสั่งซื้อเลย -->
                     <div class="mt-auto flex flex-col sm:flex-row gap-3">
-                        <a href="index.html#products" class="flex-1 bg-primary hover:bg-blue-700 text-white font-medium py-3.5 px-6 rounded-xl shadow-md transition flex items-center justify-center text-sm">
-                            <i class="fa-solid fa-cart-shopping mr-2"></i> ไปเลือกซื้อสินค้าที่หน้าร้าน
-                        </a>
-                        <a href="index.html" class="sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3.5 px-6 rounded-xl transition flex items-center justify-center text-sm">
-                            ดูสินค้าอื่น
-                        </a>
+                        <button onclick="addCurrentProductToCart(false)" class="flex-1 bg-blue-50 hover:bg-blue-100 text-primary border border-blue-200 font-semibold py-3.5 px-6 rounded-xl transition flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-cart-plus mr-2"></i> เพิ่มลงตะกร้า
+                        </button>
+                        <button onclick="addCurrentProductToCart(true)" class="flex-1 bg-primary hover:bg-blue-700 text-white font-semibold py-3.5 px-6 rounded-xl shadow-md transition flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-bolt mr-2"></i> สั่งซื้อสินค้าทันที
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- Shopping Cart Sidebar (ลิงก์ข้อมูลร่วมกับหน้าแรก) -->
+    <div id="cart-sidebar" class="fixed inset-0 z-50 invisible">
+        <div id="cart-backdrop" class="absolute inset-0 bg-black bg-opacity-50 opacity-0 transition-opacity duration-300" onclick="toggleCart()"></div>
+        <div id="cart-panel" class="absolute inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="text-lg font-bold text-gray-900"><i class="fa-solid fa-cart-shopping mr-2 text-primary"></i> ตะกร้าสินค้าของคุณ</h2>
+                <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-600 focus:outline-none p-2">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div id="cart-items-container" class="flex-1 overflow-y-auto p-6 space-y-4 cart-scroll">
+                <div id="empty-cart-msg" class="text-center text-gray-500 py-10 flex flex-col items-center">
+                    <i class="fa-solid fa-basket-shopping text-4xl mb-3 opacity-20"></i>
+                    <p>ตะกร้าสินค้าว่างเปล่า</p>
+                </div>
+            </div>
+
+            <div class="border-t p-6 bg-gray-50">
+                <div class="flex justify-between text-base font-medium text-gray-900 mb-4">
+                    <p>ยอดรวมทั้งสิ้น</p>
+                    <p id="cart-total">฿0</p>
+                </div>
+                <p class="text-sm text-gray-500 mb-6">ราคานี้รวมภาษีมูลค่าเพิ่มแล้ว จัดส่งฟรี</p>
+                <button onclick="checkout()" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl shadow-md transition flex justify-center items-center">
+                    ดำเนินการชำระเงิน <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal (PromptPay QR Code) -->
+    <div id="payment-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closePaymentModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 z-10 overflow-hidden transform transition-all">
+            <div class="flex justify-between items-center pb-3 border-b mb-4">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                    <i class="fa-solid fa-qrcode text-primary mr-2"></i> ชำระเงินผ่าน PromptPay QR
+                </h3>
+                <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="text-center space-y-4">
+                <p class="text-xs text-gray-500">สแกน QR Code ด้วยแอปธนาคารใดก็ได้เพื่อชำระเงิน</p>
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 inline-block shadow-inner">
+                    <img id="promptpay-qr-img" src="" alt="PromptPay QR Code" class="w-48 h-48 mx-auto object-contain">
+                    <p class="text-xs text-gray-500 mt-2 font-mono" id="promptpay-num-display">พร้อมเพย์: 062-391-0008</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-xl">
+                    <span class="text-xs text-blue-600 block">ยอดชำระสุทธิ</span>
+                    <span id="payment-amount-display" class="text-2xl font-bold text-primary">฿0</span>
+                </div>
+                <div class="text-left space-y-1 pt-1">
+                    <label class="block text-xs font-bold text-gray-700">แนบสลิปการโอนเงิน (ถ้ามี):</label>
+                    <input type="file" id="slip-file-input" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-primary hover:file:bg-blue-100 transition">
+                </div>
+                <button id="confirm-payment-btn" onclick="submitPaymentWithSlip()" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-3 rounded-xl shadow-md transition mt-2 flex justify-center items-center text-sm">
+                    <i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการชำระเงิน
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-4 left-4 sm:left-auto sm:right-5 z-50 flex flex-col gap-2"></div>
 
     <!-- Footer -->
     <footer class="bg-gray-900 text-gray-400 py-8 mt-auto text-center text-sm">
@@ -127,17 +219,48 @@
     </footer>
 
     <script>
-        // เชื่อมต่อ Supabase (ใช้ค่าเดียวกับ index.html)
         const SUPABASE_URL = 'https://zlpxxwauxgwsvvukfqmx.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_mTmE2KIwTN0vsM7nDlePTg_rHJwCaNn';                 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const PROMPTPAY_NUMBER = "0623910008"; 
+        const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1570114848656724109/ZYP72Deasv9zoUB-vdhG8ixueTXdWzmXV2FKWZ1IIyo3QMVIpgh3_udCftm-nuzyxrAY"; 
+
+        let currentProduct = null;
+        let currentUser = null;
+        let isCartOpen = false;
+        let currentPendingOrder = null;
+
+        // ดึงข้อมูลตะกร้าที่ซิงค์ร่วมกับหน้า index.html ผ่าน localStorage
+        let cart = JSON.parse(localStorage.getItem('electrohub_cart')) || [];
+
+        const saveCartToStorage = () => {
+            localStorage.setItem('electrohub_cart', JSON.stringify(cart));
+        };
 
         const formatPrice = (price) => {
             return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(price);
         };
 
+        // ตรวจสอบสถานะล็อกอินร่วมกับหน้า index.html อัตโนมัติ
+        async function checkUserSession() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session && session.user) {
+                const user = session.user;
+                currentUser = {
+                    id: user.id,
+                    email: user.email,
+                    name: user.user_metadata?.display_name || user.email.split('@')[0]
+                };
+                document.getElementById('login-link-btn').classList.add('hidden');
+                const badge = document.getElementById('user-badge');
+                badge.classList.remove('hidden');
+                document.getElementById('user-name-label').innerText = `คุณ${currentUser.name}`;
+            }
+        }
+
+        // โหลดข้อมูลสินค้าตาม ID
         async function loadProductDetail() {
-            // อ่านค่า ?id=... จาก URL
             const urlParams = new URLSearchParams(window.location.search);
             const productId = urlParams.get('id');
 
@@ -155,12 +278,12 @@
 
                 if (error || !product) throw new Error("ไม่พบข้อมูลสินค้านี้ในระบบ");
 
-                // อัปเดต Title และ Breadcrumb
+                currentProduct = product;
+
                 document.title = `${product.name} - ElectroHub`;
                 document.getElementById('breadcrumb-category').innerText = product.category || 'สินค้า';
                 document.getElementById('breadcrumb-name').innerText = product.name;
 
-                // รูปภาพและป้ายกำกับ
                 document.getElementById('detail-image').src = product.image;
                 document.getElementById('detail-image').alt = product.name;
                 if (product.badge) {
@@ -170,7 +293,6 @@
                     if (product.badge.includes('ลดราคา')) badgeEl.classList.replace('bg-primary', 'bg-red-500');
                 }
 
-                // ข้อมูลหลัก
                 document.getElementById('detail-category').innerText = product.category || 'ทั่วไป';
                 document.getElementById('detail-name').innerText = product.name;
                 document.getElementById('detail-price').innerText = formatPrice(product.price);
@@ -181,7 +303,6 @@
                     origEl.classList.remove('hidden');
                 }
 
-                // ดาวและรีวิว
                 const rating = product.rating || 5;
                 let starsHtml = '';
                 for (let i = 1; i <= 5; i++) {
@@ -192,7 +313,6 @@
                 starsHtml += `<span class="text-gray-500 text-xs ml-2">(${product.reviews || 0} รีวิว)</span>`;
                 document.getElementById('detail-rating').innerHTML = starsHtml;
 
-                // สต็อกสินค้า
                 const stockEl = document.getElementById('detail-stock');
                 if (product.stock !== null && product.stock <= 0) {
                     stockEl.className = 'font-medium text-red-500';
@@ -201,11 +321,9 @@
                     stockEl.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> มีสินค้าพร้อมส่ง (${product.stock || 'พร้อมจัดส่ง'} ชิ้น)`;
                 }
 
-                // คำอธิบายสินค้า (ถ้ายังไม่ได้กรอกใน Supabase จะแสดงข้อความมาตรฐานให้)
                 document.getElementById('detail-description').innerText = product.description || 
                     `สินค้าคุณภาพระดับพรีเมียม ${product.name} หมวดหมู่ ${product.category || 'อุปกรณ์อิเล็กทรอนิกส์'} รับประกันศูนย์ไทยแท้ 100% พร้อมบริการจัดส่งด่วนทั่วประเทศ`;
 
-                // สเปกสินค้า (รองรับการคั่นด้วยเครื่องหมาย | เช่น "CPU: M3 | RAM: 16GB | ความจุ: 512GB")
                 const specsContainer = document.getElementById('detail-specs-container');
                 if (product.specs) {
                     const specItems = product.specs.split('|');
@@ -227,7 +345,6 @@
                     `;
                 }
 
-                // แสดงการ์ดรายละเอียดสินค้า
                 document.getElementById('loading-state').classList.add('hidden');
                 document.getElementById('product-detail-card').classList.remove('hidden');
 
@@ -240,7 +357,239 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', loadProductDetail);
+        // เพิ่มสินค้าหน้านี้ลงตะกร้า (buyNow = true จะเปิดตะกร้าให้ทันที)
+        function addCurrentProductToCart(buyNow = false) {
+            if (!currentProduct) return;
+
+            const existingItem = cart.find(item => item.product.id === currentProduct.id && item.product.price === currentProduct.price);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ product: currentProduct, quantity: 1 });
+            }
+
+            saveCartToStorage();
+            updateCartUI();
+            showToast(`เพิ่ม <b>${currentProduct.name}</b> ลงในตะกร้าแล้ว`);
+
+            if (buyNow && !isCartOpen) {
+                toggleCart();
+            }
+        }
+
+        // จัดการตะกร้าสินค้า
+        function toggleCart() {
+            const sidebar = document.getElementById('cart-sidebar');
+            const backdrop = document.getElementById('cart-backdrop');
+            const panel = document.getElementById('cart-panel');
+
+            isCartOpen = !isCartOpen;
+
+            if (isCartOpen) {
+                sidebar.classList.remove('invisible');
+                setTimeout(() => {
+                    backdrop.classList.remove('opacity-0');
+                    panel.classList.remove('translate-x-full');
+                }, 10);
+            } else {
+                backdrop.classList.add('opacity-0');
+                panel.classList.add('translate-x-full');
+                setTimeout(() => {
+                    sidebar.classList.add('invisible');
+                }, 300);
+            }
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            saveCartToStorage();
+            updateCartUI();
+        }
+
+        function updateQuantity(index, delta) {
+            const item = cart[index];
+            if (item) {
+                item.quantity += delta;
+                if (item.quantity <= 0) {
+                    removeFromCart(index);
+                } else {
+                    saveCartToStorage();
+                    updateCartUI();
+                }
+            }
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items-container');
+            const emptyMsg = document.getElementById('empty-cart-msg');
+            const cartCount = document.getElementById('cart-count');
+            const cartTotal = document.getElementById('cart-total');
+
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCount.innerText = totalItems;
+            
+            if (cart.length === 0) {
+                emptyMsg.style.display = 'flex';
+                container.querySelectorAll('.cart-item').forEach(item => item.remove());
+                cartTotal.innerText = '฿0';
+                return;
+            } else {
+                emptyMsg.style.display = 'none';
+            }
+
+            container.querySelectorAll('.cart-item').forEach(item => item.remove());
+            let totalPrice = 0;
+
+            cart.forEach((item, index) => {
+                totalPrice += item.product.price * item.quantity;
+                const itemEl = document.createElement('div');
+                itemEl.className = 'cart-item flex items-center gap-4 bg-white p-3 border rounded-xl shadow-sm';
+                itemEl.innerHTML = `
+                    <img src="${item.product.image}" alt="${item.product.name}" class="w-20 h-20 object-cover rounded-lg bg-gray-100">
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-sm font-semibold text-gray-900 truncate">${item.product.name}</h4>
+                        <div class="text-primary font-medium text-sm mt-1">${formatPrice(item.product.price)}</div>
+                        <div class="flex items-center mt-2 border rounded-lg w-fit">
+                            <button onclick="updateQuantity(${index}, -1)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg transition"><i class="fa-solid fa-minus text-xs"></i></button>
+                            <span class="px-3 text-sm font-medium w-8 text-center">${item.quantity}</span>
+                            <button onclick="updateQuantity(${index}, 1)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-r-lg transition"><i class="fa-solid fa-plus text-xs"></i></button>
+                        </div>
+                    </div>
+                    <button onclick="removeFromCart(${index})" class="text-gray-400 hover:text-red-500 p-2 self-start transition">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+                container.appendChild(itemEl);
+            });
+
+            cartTotal.innerText = formatPrice(totalPrice);
+        }
+
+        // ระบบชำระเงิน PromptPay QR + บันทึกลง Supabase
+        function checkout() {
+            if (cart.length === 0) {
+                showToast("ตะกร้าสินค้าว่างเปล่า กรุณาเลือกสินค้าก่อน", "error");
+                return;
+            }
+
+            if (!currentUser) {
+                showToast("กรุณาเข้าสู่ระบบที่หน้าแรกก่อนทำการสั่งซื้อสินค้า", "error");
+                setTimeout(() => { window.location.href = "index.html"; }, 1500);
+                return;
+            }
+
+            const totalPrice = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+            const qrUrl = `https://promptpay.io/${PROMPTPAY_NUMBER}/${totalPrice}.png`;
+            
+            document.getElementById('promptpay-qr-img').src = qrUrl;
+            document.getElementById('promptpay-num-display').innerText = `พร้อมเพย์: ${PROMPTPAY_NUMBER}`;
+            document.getElementById('payment-amount-display').innerText = formatPrice(totalPrice);
+
+            currentPendingOrder = {
+                totalPrice: totalPrice,
+                items: cart.map(item => ({
+                    id: item.product.id,
+                    name: item.product.name,
+                    price: item.product.price,
+                    quantity: item.quantity,
+                    image: item.product.image
+                }))
+            };
+
+            toggleCart();
+            document.getElementById('payment-modal').classList.remove('hidden');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.add('hidden');
+            document.getElementById('slip-file-input').value = '';
+        }
+
+        async function submitPaymentWithSlip() {
+            if (!currentPendingOrder) return;
+            const btn = document.getElementById('confirm-payment-btn');
+            if (btn.disabled) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังบันทึกออเดอร์...';
+
+            try {
+                const { data: orderData, error: orderError } = await supabaseClient
+                    .from('orders')
+                    .insert([{
+                        user_id: currentUser.id,
+                        user_email: currentUser.email,
+                        total_amount: currentPendingOrder.totalPrice,
+                        items: currentPendingOrder.items,
+                        status: 'ชำระเงินแล้ว',
+                        payment_method: 'PromptPay QR',
+                        slip_url: null
+                    }])
+                    .select();
+
+                if (orderError) throw orderError;
+
+                const newOrderId = orderData[0]?.id || 'N/A';
+
+                if (DISCORD_WEBHOOK_URL && DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
+                    const itemListStr = currentPendingOrder.items.map(i => `• **${i.name}** (x${i.quantity}) - ฿${(i.price * i.quantity).toLocaleString()}`).join('\n');
+                    await fetch(DISCORD_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: "ElectroHub Bot",
+                            embeds: [{
+                                title: `🛒 มีคำสั่งซื้อใหม่เข้ามา! (ออเดอร์ #${newOrderId})`,
+                                color: 0x2563eb,
+                                fields: [
+                                    { name: "👤 ผู้สั่งซื้อ", value: currentUser.email, inline: true },
+                                    { name: "💰 ยอดรวมสุทธิ", value: `**฿${currentPendingOrder.totalPrice.toLocaleString()}**`, inline: true },
+                                    { name: "📦 รายการสินค้า", value: itemListStr, inline: false }
+                                ],
+                                timestamp: new Date().toISOString()
+                            }]
+                        })
+                    });
+                }
+
+                cart = [];
+                saveCartToStorage();
+                updateCartUI();
+                closePaymentModal();
+                currentPendingOrder = null;
+
+                showToast("ชำระเงินและบันทึกคำสั่งซื้อเรียบร้อยแล้ว!", "success");
+            } catch (err) {
+                showToast("เกิดข้อผิดพลาด: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการชำระเงิน';
+            }
+        }
+
+        function showToast(message, type = "success") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast-enter flex items-center p-4 mb-2 text-gray-900 bg-white rounded-lg shadow-xl border-l-4 w-full sm:min-w-[300px] sm:w-auto`;
+            if(type === "success") {
+                toast.classList.add('border-green-500');
+                toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg mr-3"><i class="fa-solid fa-check"></i></div><div class="text-sm font-medium">${message}</div>`;
+            } else {
+                toast.classList.add('border-red-500');
+                toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg mr-3"><i class="fa-solid fa-exclamation"></i></div><div class="text-sm font-medium">${message}</div>`;
+            }
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.replace('toast-enter', 'toast-exit');
+                setTimeout(() => { toast.remove(); }, 300);
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProductDetail();
+            updateCartUI();
+            checkUserSession();
+        });
     </script>
 </body>
 </html>
