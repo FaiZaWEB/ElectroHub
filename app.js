@@ -10,16 +10,23 @@ const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/157011484865672410
 
 // สถานะกลาง (แชร์ข้อมูลตะกร้าร่วมกันทุกหน้าผ่าน localStorage)
 let cart = JSON.parse(localStorage.getItem('electrohub_cart')) || [];
+let appliedCoupon = JSON.parse(localStorage.getItem('electrohub_coupon')) || null; // เก็บคูปองที่กำลังใช้งาน
 let currentUser = null;
 let isCartOpen = false;
 let currentPendingOrder = null;
 
-// บันทึกตะกร้าลงหน่วยความจำเบราว์เซอร์
 function saveCartToStorage() {
     localStorage.setItem('electrohub_cart', JSON.stringify(cart));
 }
 
-// จัดรูปแบบเงินบาทไทย
+function saveCouponToStorage() {
+    if (appliedCoupon) {
+        localStorage.setItem('electrohub_coupon', JSON.stringify(appliedCoupon));
+    } else {
+        localStorage.removeItem('electrohub_coupon');
+    }
+}
+
 function formatPrice(price) {
     return new Intl.NumberFormat('th-TH', {
         style: 'currency',
@@ -71,7 +78,77 @@ function updateSharedAuthUI() {
 }
 
 // ==========================================
-// 3. ระบบตะกร้าสินค้ากลาง (Shared Cart)
+// 3. ระบบคูปองส่วนลดในตะกร้า (Coupon System)
+// ==========================================
+async function applyCartCoupon() {
+    const inputEl = document.getElementById('cart-coupon-input');
+    if (!inputEl) return;
+
+    const code = inputEl.value.trim().toUpperCase();
+    if (!code) {
+        showToast("กรุณากรอกรหัสคูปองส่วนลด", "error");
+        return;
+    }
+
+    if (!currentUser) {
+        showToast("กรุณาเข้าสู่ระบบก่อนใช้โค้ดส่วนลด", "error");
+        return;
+    }
+
+    if (cart.length === 0) {
+        showToast("กรุณาเพิ่มสินค้าลงตะกร้าก่อนใช้โค้ดส่วนลด", "error");
+        return;
+    }
+
+    // ดึงรายการคูปองที่ผู้ใช้แลกไว้จาก Supabase User Metadata
+    const { data: { user: fullUser }, error } = await supabaseClient.auth.getUser();
+    if (error || !fullUser) {
+        showToast("ไม่สามารถตรวจสอบคูปองได้ กรุณาลองใหม่", "error");
+        return;
+    }
+
+    const userCoupons = fullUser.user_metadata?.redeemed_coupons || [];
+    const matchedCoupon = userCoupons.find(c => c.code.toUpperCase() === code);
+
+    if (!matchedCoupon) {
+        showToast("ไม่พบรหัสคูปองนี้ในบัญชีของคุณ", "error");
+        return;
+    }
+
+    if (matchedCoupon.used) {
+        showToast("คูปองรหัสนี้ถูกใช้งานไปแล้ว", "error");
+        return;
+    }
+
+    // เช็กยอดสั่งซื้อขั้นต่ำ (ถ้ามี)
+    const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    if (matchedCoupon.code.startsWith('HUB100') && subtotal < 1000) {
+        showToast("คูปองนี้ใช้ได้เมื่อสั่งซื้อครบ ฿1,000 ขึ้นไป", "error");
+        return;
+    }
+
+    appliedCoupon = {
+        code: matchedCoupon.code,
+        title: matchedCoupon.title,
+        discountValue: matchedCoupon.discountValue
+    };
+
+    saveCouponToStorage();
+    updateCartUI();
+    showToast(`ใช้โค้ด <b>${matchedCoupon.code}</b> ลดเพิ่ม ${formatPrice(matchedCoupon.discountValue)} สำเร็จ!`, "success");
+}
+
+function removeCartCoupon() {
+    appliedCoupon = null;
+    saveCouponToStorage();
+    const inputEl = document.getElementById('cart-coupon-input');
+    if (inputEl) inputEl.value = '';
+    updateCartUI();
+    showToast("ยกเลิกการใช้โค้ดส่วนลดแล้ว");
+}
+
+// ==========================================
+// 4. ระบบตะกร้าสินค้ากลาง (Shared Cart + คำนวณส่วนลด)
 // ==========================================
 function triggerCartBounce() {
     const cartBtn = document.getElementById('cart-nav-btn');
@@ -122,6 +199,10 @@ function addItemToSharedCart(productObj, openSidebar = false) {
 
 function removeFromCart(index) {
     cart.splice(index, 1);
+    if (cart.length === 0) {
+        appliedCoupon = null;
+        saveCouponToStorage();
+    }
     saveCartToStorage();
     updateCartUI();
 }
@@ -144,6 +225,13 @@ function updateCartUI() {
     const cartCount = document.getElementById('cart-count');
     const cartTotal = document.getElementById('cart-total');
 
+    // ส่วนแสดงผลคูปองและส่วนลดในตะกร้า
+    const discountRow = document.getElementById('cart-discount-row');
+    const discountAmountEl = document.getElementById('cart-discount-amount');
+    const appliedCouponBadge = document.getElementById('applied-coupon-badge');
+    const appliedCouponText = document.getElementById('applied-coupon-text');
+    const couponInputGroup = document.getElementById('coupon-input-group');
+
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     if (cartCount) cartCount.innerText = totalItems;
 
@@ -153,15 +241,18 @@ function updateCartUI() {
         emptyMsg.style.display = 'flex';
         container.querySelectorAll('.cart-item').forEach(item => item.remove());
         cartTotal.innerText = '฿0';
+        if (discountRow) discountRow.classList.add('hidden');
+        if (appliedCouponBadge) appliedCouponBadge.classList.add('hidden');
+        if (couponInputGroup) couponInputGroup.classList.remove('hidden');
         return;
     }
 
     emptyMsg.style.display = 'none';
     container.querySelectorAll('.cart-item').forEach(item => item.remove());
 
-    let totalPrice = 0;
+    let subtotalPrice = 0;
     cart.forEach((item, index) => {
-        totalPrice += item.product.price * item.quantity;
+        subtotalPrice += item.product.price * item.quantity;
         const itemEl = document.createElement('div');
         itemEl.className = 'cart-item flex items-center gap-4 bg-white p-3 border rounded-xl shadow-sm transition-all hover:shadow-md';
         itemEl.innerHTML = `
@@ -182,11 +273,27 @@ function updateCartUI() {
         container.appendChild(itemEl);
     });
 
-    cartTotal.innerText = formatPrice(totalPrice);
+    // คำนวณส่วนลดจากคูปอง (ไม่ให้ยอดสุทธิติดลบ)
+    let discountValue = 0;
+    if (appliedCoupon) {
+        discountValue = Math.min(subtotalPrice, appliedCoupon.discountValue);
+        if (discountRow) discountRow.classList.remove('hidden');
+        if (discountAmountEl) discountAmountEl.innerText = `-${formatPrice(discountValue)}`;
+        if (appliedCouponBadge) appliedCouponBadge.classList.remove('hidden');
+        if (appliedCouponText) appliedCouponText.innerText = `${appliedCoupon.code} (-${formatPrice(discountValue)})`;
+        if (couponInputGroup) couponInputGroup.classList.add('hidden');
+    } else {
+        if (discountRow) discountRow.classList.add('hidden');
+        if (appliedCouponBadge) appliedCouponBadge.classList.add('hidden');
+        if (couponInputGroup) couponInputGroup.classList.remove('hidden');
+    }
+
+    const finalPrice = Math.max(0, subtotalPrice - discountValue);
+    cartTotal.innerText = formatPrice(finalPrice);
 }
 
 // ==========================================
-// 4. ระบบชำระเงิน PromptPay QR และ Discord Bot
+// 5. ระบบชำระเงิน PromptPay QR และตัดสิทธิ์คูปอง
 // ==========================================
 function checkout() {
     if (cart.length === 0) {
@@ -204,8 +311,11 @@ function checkout() {
         return;
     }
 
-    const totalPrice = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-    const qrUrl = `https://promptpay.io/${PROMPTPAY_NUMBER}/${totalPrice}.png`;
+    const subtotalPrice = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    const discountValue = appliedCoupon ? Math.min(subtotalPrice, appliedCoupon.discountValue) : 0;
+    const finalPrice = Math.max(0, subtotalPrice - discountValue);
+
+    const qrUrl = `https://promptpay.io/${PROMPTPAY_NUMBER}/${finalPrice}.png`;
 
     const qrImg = document.getElementById('promptpay-qr-img');
     const numDisplay = document.getElementById('promptpay-num-display');
@@ -214,17 +324,33 @@ function checkout() {
 
     if (qrImg) qrImg.src = qrUrl;
     if (numDisplay) numDisplay.innerText = `พร้อมเพย์: ${PROMPTPAY_NUMBER}`;
-    if (amountDisplay) amountDisplay.innerText = formatPrice(totalPrice);
+    if (amountDisplay) {
+        amountDisplay.innerText = formatPrice(finalPrice);
+    }
+
+    const orderItemsList = cart.map(item => ({
+        id: item.product.id,
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        image: item.product.image
+    }));
+
+    // ถ้ามีการใช้คูปองส่วนลด ให้บันทึกเป็นรายการส่วนลดท้ายบิลด้วย
+    if (appliedCoupon && discountValue > 0) {
+        orderItemsList.push({
+            id: 'COUPON',
+            name: `ส่วนลดคูปอง (${appliedCoupon.code})`,
+            price: -discountValue,
+            quantity: 1,
+            image: 'https://cdn-icons-png.flaticon.com/512/879/879757.png'
+        });
+    }
 
     currentPendingOrder = {
-        totalPrice: totalPrice,
-        items: cart.map(item => ({
-            id: item.product.id,
-            name: item.product.name,
-            price: item.product.price,
-            quantity: item.quantity,
-            image: item.product.image
-        }))
+        totalPrice: finalPrice,
+        couponUsed: appliedCoupon ? appliedCoupon.code : null,
+        items: orderItemsList
     };
 
     if (isCartOpen) toggleCart();
@@ -264,11 +390,25 @@ async function submitPaymentWithSlip() {
 
         if (orderError) throw orderError;
 
+        // ถ้ามีการใช้คูปองส่วนลด ให้อัปเดตสถานะคูปองใบนั้นเป็น "used: true" ในบัญชีลูกค้า
+        if (currentPendingOrder.couponUsed) {
+            const { data: { user: fullUser } } = await supabaseClient.auth.getUser();
+            const userCoupons = fullUser?.user_metadata?.redeemed_coupons || [];
+            const updatedCoupons = userCoupons.map(c =>
+                c.code.toUpperCase() === currentPendingOrder.couponUsed.toUpperCase()
+                    ? { ...c, used: true, usedAt: new Date().toISOString() }
+                    : c
+            );
+            await supabaseClient.auth.updateUser({ data: { redeemed_coupons: updatedCoupons } });
+        }
+
         const newOrderId = orderData[0]?.id || 'N/A';
         await sendDiscordOrderNotification(newOrderId, currentUser.email, currentPendingOrder.totalPrice, currentPendingOrder.items);
 
         cart = [];
+        appliedCoupon = null;
         saveCartToStorage();
+        saveCouponToStorage();
         updateCartUI();
         closePaymentModal();
         currentPendingOrder = null;
@@ -316,7 +456,7 @@ async function sendDiscordOrderNotification(orderId, userEmail, totalAmount, ite
 }
 
 // ==========================================
-// 5. ระบบแจ้งเตือน Toast และซิงค์ตะกร้าอัตโนมัติ
+// 6. ระบบแจ้งเตือน Toast และซิงค์ตะกร้าอัตโนมัติ
 // ==========================================
 function showToast(message, type = "success") {
     const container = document.getElementById('toast-container');
@@ -340,8 +480,8 @@ function showToast(message, type = "success") {
     }, 3000);
 }
 
-// ซิงค์ตะกร้าอัตโนมัติเมื่อกด Back หรือสลับแท็บกลับมา
 window.addEventListener('pageshow', () => {
     cart = JSON.parse(localStorage.getItem('electrohub_cart')) || [];
+    appliedCoupon = JSON.parse(localStorage.getItem('electrohub_coupon')) || null;
     updateCartUI();
 });
