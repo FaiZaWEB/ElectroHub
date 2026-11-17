@@ -29,7 +29,7 @@
         }
     </script>
     <style>
-        /* Custom Scrollbar for Cart */
+        /* Custom Scrollbar for Cart & Drawer */
         .cart-scroll::-webkit-scrollbar {
             width: 6px;
         }
@@ -61,27 +61,29 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans flex flex-col min-h-screen">
+<body class="bg-gray-50 text-gray-800 font-sans flex flex-col min-h-screen overflow-x-hidden w-full">
 
     <!-- Navbar -->
-    <nav class="bg-white shadow-sm sticky top-0 z-40">
+    <nav class="bg-white shadow-sm sticky top-0 z-40 w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
-                <div class="flex-shrink-0 flex items-center cursor-pointer">
+                <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
                     <i class="fa-solid fa-microchip text-primary text-2xl mr-2"></i>
-                    <span class="font-bold text-2xl tracking-tight text-secondary">Electro<span class="text-primary">Hub</span></span>
+                    <span class="font-bold text-xl sm:text-2xl tracking-tight text-secondary">Electro<span class="text-primary">Hub</span></span>
                 </div>
                 
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex space-x-8 items-center">
                     <a href="#" class="text-gray-600 hover:text-primary transition font-medium">หน้าแรก</a>
-                    <a href="#products" class="text-gray-600 hover:text-primary transition font-medium">สินค้าทั้งหมด</a>
+                    <a href="#products" onclick="toggleCategoryDrawer()" class="text-gray-600 hover:text-primary transition font-medium flex items-center">
+                        <i class="fa-solid fa-layer-group mr-1.5 text-xs text-primary"></i> หมวดหมู่สินค้า
+                    </a>
                     <a href="#" class="text-gray-600 hover:text-primary transition font-medium">โปรโมชั่น</a>
                     <a href="#" class="text-gray-600 hover:text-primary transition font-medium">ติดต่อเรา</a>
                 </div>
 
-                <!-- Search Bar -->
+                <!-- Search Bar (Desktop) -->
                 <div class="hidden lg:flex items-center flex-1 max-w-xs mx-6">
                     <div class="relative w-full">
                         <input type="text" id="search-input" onkeyup="filterProducts()" placeholder="ค้นหาสินค้า..." class="w-full bg-gray-100 text-sm pl-9 pr-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition">
@@ -90,21 +92,21 @@
                 </div>
 
                 <!-- Right Actions: Auth & Cart -->
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-2 sm:space-x-3">
                     <!-- Auth Section -->
                     <div id="auth-section">
                         <!-- Login/Register Button (Unauthenticated) -->
-                        <button id="login-btn" onclick="openAuthModal('login')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-full text-sm transition flex items-center">
-                            <i class="fa-regular fa-user mr-2"></i> เข้าสู่ระบบ
+                        <button id="login-btn" onclick="openAuthModal('login')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition flex items-center whitespace-nowrap">
+                            <i class="fa-regular fa-user sm:mr-2"></i> <span class="hidden sm:inline">เข้าสู่ระบบ</span>
                         </button>
 
                         <!-- User Profile Dropdown (Authenticated - Hidden by Default) -->
                         <div id="user-menu" class="relative hidden">
-                            <button onclick="toggleUserDropdown()" class="flex items-center space-x-2 bg-blue-50 text-primary font-medium px-3 py-1.5 rounded-full hover:bg-blue-100 transition focus:outline-none">
+                            <button onclick="toggleUserDropdown()" class="flex items-center space-x-1.5 sm:space-x-2 bg-blue-50 text-primary font-medium px-2.5 sm:px-3 py-1.5 rounded-full hover:bg-blue-100 transition focus:outline-none">
                                 <div class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs" id="user-avatar">
                                     U
                                 </div>
-                                <span id="user-display-name" class="text-sm">คุณสมชาย</span>
+                                <span id="user-display-name" class="text-xs sm:text-sm max-w-[90px] sm:max-w-[140px] truncate">คุณสมชาย</span>
                                 <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
                             </button>
 
@@ -121,12 +123,12 @@
                     <!-- Cart Button -->
                     <button onclick="toggleCart()" class="relative p-2 text-gray-600 hover:text-primary transition focus:outline-none">
                         <i class="fa-solid fa-cart-shopping text-xl"></i>
-                        <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full">0</span>
+                        <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full">0</span>
                     </button>
                     
-                    <!-- Mobile menu button -->
+                    <!-- Mobile menu button (เปิดเมนูหมวดหมู่และหน้าเว็บ) -->
                     <div class="md:hidden">
-                        <button class="text-gray-600 hover:text-gray-900 focus:outline-none p-2">
+                        <button onclick="toggleCategoryDrawer()" class="text-gray-600 hover:text-primary focus:outline-none p-2">
                             <i class="fa-solid fa-bars text-xl"></i>
                         </button>
                     </div>
@@ -136,22 +138,22 @@
     </nav>
 
     <!-- Hero Section -->
-    <div class="bg-secondary text-white relative overflow-hidden min-h-[600px] flex items-center">
+    <div class="bg-secondary text-white relative overflow-hidden min-h-[420px] md:min-h-[600px] flex items-center w-full">
         <!-- Background Image -->
         <div class="absolute inset-0 z-0">
             <img src="./images/electronics_banner_1920x600.png" alt="ElectroHub Background" class="w-full h-full object-cover object-center">
             <!-- Dark Gradient Overlay -->
-            <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/35 to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-slate-900/85 via-slate-900/50 to-transparent"></div>
         </div>
 
         <!-- Hero Content -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full">
-            <div class="md:w-1/2">
-                <h1 class="text-4xl md:text-5xl font-bold mb-4 leading-tight">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 relative z-10 w-full">
+            <div class="md:w-2/3 lg:w-1/2">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
                     นวัตกรรมแห่งอนาคต <br>
                     <span class="text-primary">อยู่ในมือคุณแล้ววันนี้</span>
                 </h1>
-                <p class="text-lg text-gray-300 mb-8 max-w-xl">
+                <p class="text-base sm:text-lg text-gray-300 mb-8 max-w-xl">
                     พบกับสมาร์ทโฟน แล็ปท็อป และอุปกรณ์แกดเจ็ตระดับพรีเมียมในราคาพิเศษ พร้อมบริการจัดส่งฟรีทั่วประเทศ
                 </p>
                 <a href="#products" class="inline-block bg-primary hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-full shadow-lg transition transform hover:-translate-y-1">
@@ -161,13 +163,74 @@
         </div>
     </div>
 
-    <!-- Category Filters -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">หมวดหมู่สินค้า</h3>
-        <div class="flex space-x-2 overflow-x-auto pb-2 scrollbar-none">
-            <!-- ปุ่มหมวดหมู่จะถูกสร้างอัตโนมัติจาก Supabase -->
+    <!-- Category Filters Bar (ปุ่ม 3 ขีดเลือกหมวดหมู่ + ช่องค้นหาบนมือถือ) -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 w-full">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex flex-wrap items-center gap-3">
+                <button onclick="toggleCategoryDrawer()" class="flex items-center space-x-2.5 bg-primary hover:bg-blue-700 text-white font-medium px-4 py-2.5 rounded-xl shadow-sm transition focus:outline-none">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                    <span>เลือกหมวดหมู่สินค้า</span>
+                </button>
+                <div class="text-sm text-gray-600 flex items-center bg-gray-50 px-3 py-2 rounded-xl border border-gray-200">
+                    <span class="text-gray-500 mr-1.5">หมวดหมู่:</span>
+                    <span id="current-category-label" class="font-bold text-primary">ทั้งหมด</span>
+                </div>
+            </div>
+
+            <!-- ช่องค้นหาสำหรับมือถือและแท็บเล็ต -->
+            <div class="w-full sm:w-auto flex-1 max-w-sm lg:hidden">
+                <div class="relative w-full">
+                    <input type="text" id="mobile-search-input" onkeyup="syncMobileSearch(this.value)" placeholder="ค้นหาสินค้า..." class="w-full bg-gray-100 text-sm pl-9 pr-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+                </div>
+            </div>
         </div>
     </section>
+
+    <!-- Category Sidebar Drawer (เมนูหมวดหมู่และนำทางหน้าเว็บด้านซ้าย) -->
+    <div id="category-drawer" class="fixed inset-0 z-50 invisible">
+        <!-- Backdrop -->
+        <div id="category-backdrop" class="absolute inset-0 bg-black bg-opacity-50 opacity-0 transition-opacity duration-300" onclick="toggleCategoryDrawer()"></div>
+        
+        <!-- Drawer Panel -->
+        <div id="category-panel" class="absolute inset-y-0 left-0 max-w-xs w-[85vw] sm:w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="text-lg font-bold text-gray-900 flex items-center">
+                    <i class="fa-solid fa-layer-group mr-2 text-primary"></i> หมวดหมู่สินค้า
+                </h2>
+                <button onclick="toggleCategoryDrawer()" class="text-gray-400 hover:text-gray-600 focus:outline-none p-2">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- รายการหมวดหมู่ที่ดึงจาก Supabase อัตโนมัติ -->
+            <div class="p-4 flex-1 overflow-y-auto cart-scroll">
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">เลือกตามหมวดหมู่</p>
+                <div id="category-list-container" class="space-y-1.5">
+                    <!-- ปุ่มหมวดหมู่จะถูกสร้างอัตโนมัติผ่าน JS -->
+                </div>
+
+                <!-- เมนูนำทางหน้าเว็บสำหรับรองรับการเพิ่มหน้าใหม่ในอนาคต -->
+                <div class="mt-6 pt-6 border-t border-gray-100">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">เมนูหน้าเว็บ</p>
+                    <div class="space-y-1">
+                        <a href="#" onclick="toggleCategoryDrawer()" class="flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition">
+                            <i class="fa-solid fa-house mr-3 text-gray-400 w-4 text-center"></i> หน้าแรก
+                        </a>
+                        <a href="#products" onclick="filterCategory('all')" class="flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition">
+                            <i class="fa-solid fa-bag-shopping mr-3 text-gray-400 w-4 text-center"></i> สินค้าทั้งหมด
+                        </a>
+                        <a href="#" onclick="toggleCategoryDrawer()" class="flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition">
+                            <i class="fa-solid fa-fire mr-3 text-red-500 w-4 text-center"></i> โปรโมชั่นพิเศษ
+                        </a>
+                        <a href="#" onclick="toggleCategoryDrawer()" class="flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition">
+                            <i class="fa-solid fa-headset mr-3 text-gray-400 w-4 text-center"></i> ติดต่อเรา
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Main Content: Products -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full" id="products">
@@ -178,7 +241,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-gray-300 py-12 mt-auto">
+    <footer class="bg-gray-900 text-gray-300 py-12 mt-auto w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
@@ -191,10 +254,10 @@
                 <div>
                     <h3 class="text-white font-semibold mb-4">หมวดหมู่สินค้า</h3>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="#" class="hover:text-primary transition">สมาร์ทโฟน & แท็บเล็ต</a></li>
-                        <li><a href="#" class="hover:text-primary transition">แล็ปท็อป & คอมพิวเตอร์</a></li>
-                        <li><a href="#" class="hover:text-primary transition">สมาร์ทวอทช์</a></li>
-                        <li><a href="#" class="hover:text-primary transition">หูฟัง & ลำโพง</a></li>
+                        <li><a href="#products" onclick="toggleCategoryDrawer()" class="hover:text-primary transition">ดูหมวดหมู่ทั้งหมด</a></li>
+                        <li><a href="#products" onclick="filterCategory('Smartphone')" class="hover:text-primary transition">สมาร์ทโฟน & แท็บเล็ต</a></li>
+                        <li><a href="#products" onclick="filterCategory('Laptop')" class="hover:text-primary transition">แล็ปท็อป & คอมพิวเตอร์</a></li>
+                        <li><a href="#products" onclick="filterCategory('Hardware')" class="hover:text-primary transition">ฮาร์ดแวร์ & อุปกรณ์เสริม</a></li>
                     </ul>
                 </div>
                 <div>
@@ -255,7 +318,7 @@
     </div>
 
     <!-- Toast Container -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+    <div id="toast-container" class="fixed bottom-5 right-4 left-4 sm:left-auto sm:right-5 z-50 flex flex-col gap-2"></div>
 
     <!-- Login / Register Modal -->
     <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
@@ -281,14 +344,14 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
                         <div class="relative">
                             <i class="fa-regular fa-envelope absolute left-3 top-3 text-gray-400"></i>
-                            <input type="email" id="login-email" required placeholder="name@example.com" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <input type="email" id="login-email" required placeholder="name@example.com" autocomplete="off" autocapitalize="none" spellcheck="false" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
                         <div class="relative">
                             <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400"></i>
-                            <input type="password" id="login-password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <input type="password" id="login-password" required placeholder="••••••••" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
                         </div>
                     </div>
                     <div class="flex justify-between items-center text-xs">
@@ -308,28 +371,28 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล</label>
                         <div class="relative">
                             <i class="fa-regular fa-user absolute left-3 top-3 text-gray-400"></i>
-                            <input type="text" id="reg-name" required placeholder="สมชาย ใจดี" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <input type="text" id="reg-name" required placeholder="สมชาย ใจดี" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
                         <div class="relative">
                             <i class="fa-regular fa-envelope absolute left-3 top-3 text-gray-400"></i>
-                            <input type="email" id="reg-email" required placeholder="name@example.com" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <input type="email" id="reg-email" required placeholder="name@example.com" autocomplete="off" autocapitalize="none" spellcheck="false" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
                         <div class="relative">
                             <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400"></i>
-                            <input type="password" id="reg-password" required placeholder="อย่างน้อย 6 ตัวอักษร" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <input type="password" id="reg-password" required placeholder="อย่างน้อย 6 ตัวอักษร" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">ยืนยันรหัสผ่าน</label>
                         <div class="relative">
                             <i class="fa-solid fa-shield-halved absolute left-3 top-3 text-gray-400"></i>
-                            <input type="password" id="reg-confirm-password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <input type="password" id="reg-confirm-password" required placeholder="••••••••" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
                         </div>
                     </div>
                     <button type="submit" id="reg-submit-btn" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
@@ -346,7 +409,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">กรอกรหัสยืนยันตัวตนจากอีเมล</label>
-                        <input type="text" id="otp-code" required placeholder="กรอกรหัสจากอีเมล" class="w-full text-center text-xl tracking-widest py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary font-mono">
+                        <input type="text" id="otp-code" required placeholder="กรอกรหัสจากอีเมล" autocomplete="off" class="w-full text-center text-xl tracking-widest py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary font-mono">
                     </div>
                     <button type="submit" id="otp-submit-btn" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm">
                         ยืนยันรหัส OTP
@@ -400,7 +463,7 @@
                 
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 inline-block shadow-inner">
                     <img id="promptpay-qr-img" src="" alt="PromptPay QR Code" class="w-48 h-48 mx-auto object-contain">
-                    <p class="text-xs text-gray-500 mt-2 font-mono" id="promptpay-num-display">พร้อมเพย์: 081-234-5678</p>
+                    <p class="text-xs text-gray-500 mt-2 font-mono" id="promptpay-num-display">พร้อมเพย์: 062-391-0008</p>
                 </div>
 
                 <div class="bg-blue-50 p-3 rounded-xl">
@@ -429,7 +492,7 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_mTmE2KIwTN0vsM7nDlePTg_rHJwCaNn';                 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 👈 ตั้งค่าระบบชำระเงิน และ แจ้งเตือน Discord ที่นี่
+        // ตั้งค่าระบบชำระเงิน และ แจ้งเตือน Discord
         const PROMPTPAY_NUMBER = "0623910008"; 
         const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1570114848656724109/ZYP72Deasv9zoUB-vdhG8ixueTXdWzmXV2FKWZ1IIyo3QMVIpgh3_udCftm-nuzyxrAY"; 
 
@@ -437,6 +500,7 @@
         let products = [];
         let cart = [];
         let isCartOpen = false;
+        let isCategoryOpen = false;
         let currentUser = null;
         let activeCategory = 'all';
         let pendingEmailForOTP = '';
@@ -448,34 +512,70 @@
         };
 
         // ==========================================
-        // 2. ฟังก์ชันจัดการสินค้าและหมวดหมู่
+        // 2. ฟังก์ชันจัดการสินค้าและเมนูหมวดหมู่ (3 ขีด)
         // ==========================================
+        function syncMobileSearch(val) {
+            const desktopSearch = document.getElementById('search-input');
+            if (desktopSearch) {
+                desktopSearch.value = val;
+            }
+            filterProducts();
+        }
+
         function filterProducts() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const searchTerm = (document.getElementById('search-input')?.value || '').toLowerCase();
             const filtered = products.filter(p => {
                 const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
-                const matchesSearch = p.name.toLowerCase().includes(searchTerm) || p.category.toLowerCase().includes(searchTerm);
+                const matchesSearch = p.name.toLowerCase().includes(searchTerm) || (p.category && p.category.toLowerCase().includes(searchTerm));
                 return matchesCategory && matchesSearch;
             });
             renderProducts(filtered);
         }
 
+        function toggleCategoryDrawer() {
+            const drawer = document.getElementById('category-drawer');
+            const backdrop = document.getElementById('category-backdrop');
+            const panel = document.getElementById('category-panel');
+
+            isCategoryOpen = !isCategoryOpen;
+
+            if (isCategoryOpen) {
+                drawer.classList.remove('invisible');
+                setTimeout(() => {
+                    backdrop.classList.remove('opacity-0');
+                    panel.classList.remove('-translate-x-full');
+                }, 10);
+            } else {
+                backdrop.classList.add('opacity-0');
+                panel.classList.add('-translate-x-full');
+                setTimeout(() => {
+                    drawer.classList.add('invisible');
+                }, 300);
+            }
+        }
+
         function filterCategory(category) {
             activeCategory = category;
-            const buttons = document.querySelectorAll('.category-btn');
-            buttons.forEach(btn => {
-                if (btn.innerText.includes(category) || (category === 'all' && btn.innerText === 'ทั้งหมด')) {
-                    btn.className = 'category-btn bg-primary text-white font-medium px-5 py-2 rounded-full text-sm whitespace-nowrap shadow-sm transition';
-                } else {
-                    btn.className = 'category-btn bg-white hover:bg-gray-100 text-gray-700 font-medium px-5 py-2 rounded-full text-sm whitespace-nowrap border border-gray-200 transition';
-                }
-            });
+            
+            // อัปเดตป้ายชื่อหมวดหมู่ปัจจุบันบนหน้าเว็บ
+            const labelEl = document.getElementById('current-category-label');
+            if (labelEl) {
+                labelEl.innerText = category === 'all' ? 'ทั้งหมด' : category;
+            }
+
+            // อัปเดตสถานะปุ่มในเมนู 3 ขีด และกรองสินค้า
+            renderCategoryButtons();
             filterProducts();
+
+            // ปิดเมนูหมวดหมู่อัตโนมัติเมื่อผู้ใช้เลือกเสร็จ
+            if (isCategoryOpen) {
+                toggleCategoryDrawer();
+            }
         }
 
         function renderCategoryButtons() {
             const categories = ['all', ...new Set(products.map(p => p.category).filter(Boolean))];
-            const container = document.querySelector('section div.flex.space-x-2');
+            const container = document.getElementById('category-list-container');
             if (!container) return;
             
             container.innerHTML = '';
@@ -483,10 +583,25 @@
                 const btn = document.createElement('button');
                 const isAll = cat === 'all';
                 const label = isAll ? 'ทั้งหมด' : cat;
+                const isActive = cat === activeCategory;
                 
+                // นับจำนวนสินค้าในแต่ละหมวดหมู่
+                const count = isAll ? products.length : products.filter(p => p.category === cat).length;
+
                 btn.onclick = () => filterCategory(cat);
-                btn.className = `category-btn ${cat === activeCategory ? 'bg-primary text-white font-medium shadow-sm' : 'bg-white hover:bg-gray-100 text-gray-700 font-medium border border-gray-200'} px-5 py-2 rounded-full text-sm whitespace-nowrap transition`;
-                btn.innerText = label;
+                btn.className = `w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition ${
+                    isActive 
+                    ? 'bg-primary text-white shadow-sm' 
+                    : 'text-gray-700 hover:bg-blue-50 hover:text-primary'
+                }`;
+                
+                btn.innerHTML = `
+                    <span class="flex items-center truncate pr-2">
+                        <i class="fa-solid ${isAll ? 'fa-border-all' : 'fa-tag'} mr-3 w-4 text-center ${isActive ? 'text-white' : 'text-gray-400'}"></i>
+                        <span class="truncate">${label}</span>
+                    </span>
+                    <span class="text-xs px-2.5 py-0.5 rounded-full flex-shrink-0 ${isActive ? 'bg-blue-700 text-white' : 'bg-gray-100 text-gray-500'}">${count}</span>
+                `;
                 container.appendChild(btn);
             });
         }
@@ -525,12 +640,12 @@
                             </div>
                         </div>
                         <div class="p-5 flex flex-col flex-grow">
-                            <span class="text-xs text-primary font-medium mb-1">${product.category}</span>
+                            <span class="text-xs text-primary font-medium mb-1">${product.category || 'ทั่วไป'}</span>
                             <h3 class="text-lg font-semibold text-gray-900 mb-1 leading-tight">${product.name}</h3>
                             <div class="flex items-center mb-3">${starsHtml}<span class="text-xs text-gray-500 ml-2">(${product.reviews})</span></div>
                             <div class="mt-auto flex items-center justify-between">
-                                <div class="flex items-baseline">${priceHtml}</div>
-                                <button onclick="addToCart(${product.id})" class="md:hidden lg:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-primary hover:text-white text-gray-600 flex items-center justify-center transition-colors"><i class="fa-solid fa-plus"></i></button>
+                                <div class="flex items-baseline flex-wrap">${priceHtml}</div>
+                                <button onclick="addToCart(${product.id})" class="md:hidden lg:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-primary hover:text-white text-gray-600 flex items-center justify-center transition-colors flex-shrink-0"><i class="fa-solid fa-plus"></i></button>
                             </div>
                         </div>
                     </div>
@@ -590,6 +705,8 @@
         async function handleRegister(event) {
             event.preventDefault();
             const btn = document.getElementById('reg-submit-btn');
+            if (btn.disabled) return;
+
             const name = document.getElementById('reg-name').value;
             const email = document.getElementById('reg-email').value;
             const password = document.getElementById('reg-password').value;
@@ -628,6 +745,8 @@
         async function handleVerifyOTP(event) {
             event.preventDefault();
             const btn = document.getElementById('otp-submit-btn');
+            if (btn.disabled) return;
+
             const token = document.getElementById('otp-code').value.trim();
 
             if (!token) {
@@ -662,6 +781,8 @@
         async function handleLogin(event) {
             event.preventDefault();
             const btn = document.getElementById('login-submit-btn');
+            if (btn.disabled) return;
+
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
 
@@ -833,8 +954,8 @@
                 itemEl.className = 'cart-item flex items-center gap-4 bg-white p-3 border rounded-xl shadow-sm';
                 itemEl.innerHTML = `
                     <img src="${item.product.image}" alt="${item.product.name}" class="w-20 h-20 object-cover rounded-lg bg-gray-100">
-                    <div class="flex-1">
-                        <h4 class="text-sm font-semibold text-gray-900 line-clamp-1">${item.product.name}</h4>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-sm font-semibold text-gray-900 truncate">${item.product.name}</h4>
                         <div class="text-primary font-medium text-sm mt-1">${formatPrice(item.product.price)}</div>
                         
                         <div class="flex items-center mt-2 border rounded-lg w-fit">
@@ -856,8 +977,6 @@
         // ==========================================
         // 5. ระบบชำระเงินและแจ้งเตือน (Checkout & Payment)
         // ==========================================
-        
-        // 5.1 เปิดหน้าต่างชำระเงิน QR Code
         function checkout() {
             if (cart.length === 0) {
                 showToast("ตะกร้าสินค้าว่างเปล่า กรุณาเลือกสินค้าก่อน", "error");
@@ -872,13 +991,11 @@
 
             const totalPrice = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
             
-            // สร้าง URL PromptPay QR สดๆ
             const qrUrl = `https://promptpay.io/${PROMPTPAY_NUMBER}/${totalPrice}.png`;
             document.getElementById('promptpay-qr-img').src = qrUrl;
             document.getElementById('promptpay-num-display').innerText = `พร้อมเพย์: ${PROMPTPAY_NUMBER}`;
             document.getElementById('payment-amount-display').innerText = formatPrice(totalPrice);
 
-            // เก็บออเดอร์พักไว้รอโอน
             currentPendingOrder = {
                 totalPrice: totalPrice,
                 items: cart.map(item => ({
@@ -899,16 +1016,16 @@
             document.getElementById('slip-file-input').value = '';
         }
 
-        // 5.2 ยืนยันสลิปและบันทึกลง Supabase
         async function submitPaymentWithSlip() {
             if (!currentPendingOrder) return;
 
             const btn = document.getElementById('confirm-payment-btn');
+            if (btn.disabled) return;
+
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังบันทึกออเดอร์...';
 
             try {
-                // บันทึกลงตาราง orders ใน Supabase
                 const { data: orderData, error: orderError } = await supabaseClient
                     .from('orders')
                     .insert([
@@ -919,7 +1036,7 @@
                             items: currentPendingOrder.items,
                             status: 'ชำระเงินแล้ว',
                             payment_method: 'PromptPay QR',
-                            slip_url: null // อนาคตสามารถเพิ่มระบบอัปโหลดสลิปได้
+                            slip_url: null
                         }
                     ])
                     .select();
@@ -928,10 +1045,8 @@
 
                 const newOrderId = orderData[0]?.id || 'N/A';
 
-                // แจ้งเตือนเข้า Discord
                 await sendDiscordNotification(newOrderId, currentUser.email, currentPendingOrder.totalPrice, currentPendingOrder.items);
 
-                // ล้างตะกร้า
                 cart = [];
                 updateCartUI();
                 closePaymentModal();
@@ -948,7 +1063,6 @@
             }
         }
 
-        // 5.3 ส่งข้อความเข้า Discord Webhook
         async function sendDiscordNotification(orderId, userEmail, totalAmount, items) {
             if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL === "YOUR_DISCORD_WEBHOOK_URL_HERE") return;
 
@@ -1043,8 +1157,8 @@
                         itemsHtml += `
                             <div class="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
                                 <img src="${item.image}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg bg-gray-100">
-                                <div class="flex-1">
-                                    <p class="text-sm font-semibold text-gray-800 leading-tight">${item.name}</p>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-gray-800 truncate">${item.name}</p>
                                     <p class="text-xs text-gray-500">${formatPrice(item.price)} x ${item.quantity}</p>
                                 </div>
                                 <span class="text-sm font-bold text-gray-700">${formatPrice(item.price * item.quantity)}</span>
@@ -1087,7 +1201,7 @@
         function showToast(message, type = "success") {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = `toast-enter flex items-center p-4 mb-2 text-gray-900 bg-white rounded-lg shadow-xl border-l-4 min-w-[300px]`;
+            toast.className = `toast-enter flex items-center p-4 mb-2 text-gray-900 bg-white rounded-lg shadow-xl border-l-4 w-full sm:min-w-[300px] sm:w-auto`;
             
             if(type === "success") {
                 toast.classList.add('border-green-500');
