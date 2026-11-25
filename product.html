@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายละเอียดสินค้า - ElectroHub</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Kanit -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- เรียกใช้ไฟล์กลาง app.js -->
+    <script src="./app.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Kanit', 'Inter', 'sans-serif'] },
+                    colors: { primary: '#2563eb', secondary: '#1e293b' }
+                }
+            }
+        }
+    </script>
+    <style>
+        .cart-scroll::-webkit-scrollbar { width: 6px; }
+        .cart-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .cart-scroll::-webkit-scrollbar-thumb { background: #b8b8b8; border-radius: 10px; }
+        @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        .toast-enter { animation: slideInUp 0.3s ease-out forwards; }
+        .toast-exit { animation: fadeOut 0.3s ease-out forwards; }
+        @keyframes cartBounce {
+            0%, 100% { transform: scale(1); }
+            35% { transform: scale(1.3) rotate(-8deg); }
+            70% { transform: scale(0.9) rotate(4deg); }
+        }
+        .cart-bounce { animation: cartBounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans flex flex-col min-h-screen overflow-x-hidden w-full">
+
+    <!-- Navbar -->
+    <nav class="bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100 sticky top-0 z-40 w-full">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="./index.html" class="flex-shrink-0 flex items-center cursor-pointer group">
+                    <i class="fa-solid fa-microchip text-primary text-2xl mr-2 transition-transform group-hover:rotate-12"></i>
+                    <span class="font-bold text-xl sm:text-2xl tracking-tight text-secondary">Electro<span class="text-primary">Hub</span></span>
+                </a>
+                
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <a id="login-btn" href="./index.html" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition">
+                        เข้าสู่ระบบ
+                    </a>
+
+                    <div id="user-menu" class="hidden flex items-center space-x-2 bg-blue-50 text-primary font-medium px-3 py-1.5 rounded-full">
+                        <div class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs" id="user-avatar">U</div>
+                        <span id="user-display-name" class="text-xs sm:text-sm max-w-[120px] truncate">สมาชิก</span>
+                    </div>
+
+                    <button id="cart-nav-btn" onclick="toggleCart()" class="relative p-2 text-gray-600 hover:text-primary transition focus:outline-none">
+                        <i class="fa-solid fa-cart-shopping text-xl"></i>
+                        <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full">0</span>
+                    </button>
+
+                    <a href="./index.html" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition flex items-center">
+                        <i class="fa-solid fa-arrow-left sm:mr-2"></i> <span class="hidden sm:inline">หน้าร้าน</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2 w-full">
+        <nav class="flex text-xs sm:text-sm text-gray-500 space-x-2 items-center">
+            <a href="./index.html" class="hover:text-primary transition">หน้าแรก</a>
+            <span>/</span>
+            <span id="breadcrumb-category" class="text-gray-600">หมวดหมู่</span>
+            <span>/</span>
+            <span id="breadcrumb-name" class="text-primary font-medium truncate max-w-[200px] sm:max-w-md">กำลังโหลด...</span>
+        </nav>
+    </div>
+
+    <!-- Main Product Detail Section -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full space-y-8">
+        <!-- Loading State -->
+        <div id="loading-state" class="bg-white rounded-3xl shadow-sm p-16 text-center border border-gray-100">
+            <i class="fa-solid fa-circle-notch fa-spin text-4xl text-primary mb-3"></i>
+            <p class="text-gray-500">กำลังโหลดข้อมูลรายละเอียดสินค้า...</p>
+        </div>
+
+        <!-- Product Not Found State -->
+        <div id="not-found-state" class="hidden bg-white rounded-3xl shadow-sm p-16 text-center border border-gray-100">
+            <i class="fa-solid fa-box-open text-5xl text-gray-300 mb-4"></i>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">ไม่พบข้อมูลสินค้านี้</h2>
+            <p class="text-sm text-gray-500 mb-6">สินค้าอาจถูกลบออกจากระบบหรือลิงก์ไม่ถูกต้อง</p>
+            <a href="./index.html" class="inline-block bg-primary hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-xl transition">กลับไปเลือกดูสินค้าอื่น</a>
+        </div>
+
+        <!-- Product Detail Card -->
+        <div id="product-detail-container" class="hidden bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 sm:p-10">
+                <!-- Left: Product Image -->
+                <div class="relative bg-gray-100 rounded-2xl overflow-hidden aspect-[4/3] flex items-center justify-center group">
+                    <div id="detail-badge" class="hidden absolute top-4 left-4 bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow z-10"></div>
+                    <img id="detail-image" src="" alt="" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500">
+                </div>
+
+                <!-- Right: Product Info -->
+                <div class="flex flex-col justify-between space-y-6">
+                    <div>
+                        <span id="detail-category" class="inline-block text-xs font-bold text-primary bg-blue-50 px-3 py-1 rounded-full mb-3">หมวดหมู่</span>
+                        <h1 id="detail-name" class="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight mb-3">ชื่อสินค้า</h1>
+                        
+                        <div class="flex items-center space-x-3 mb-5">
+                            <div id="detail-stars" class="flex items-center space-x-1 text-yellow-400 text-sm"></div>
+                            <span id="detail-rating-score" class="text-xs font-bold text-gray-700">5.0</span>
+                            <a href="#reviews-section" id="detail-reviews" class="text-xs text-primary hover:underline">(0 รีวิว)</a>
+                            <span class="text-gray-300">|</span>
+                            <span id="detail-stock-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">มีสินค้าพร้อมส่ง</span>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6">
+                            <div class="flex items-baseline gap-3">
+                                <span id="detail-price" class="text-3xl sm:text-4xl font-extrabold text-primary">฿0</span>
+                                <span id="detail-original-price" class="hidden text-base text-gray-400 line-through">฿0</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-truck-fast text-primary mr-1"></i> จัดส่งฟรีทั่วประเทศ • รับประกันสินค้าของแท้ 100%</p>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-bold text-gray-900 mb-2">รายละเอียดสินค้า</h3>
+                            <p id="detail-description" class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">ไม่มีคำอธิบายเพิ่มเติม</p>
+                        </div>
+
+                        <!-- Specs -->
+                        <div id="specs-section" class="hidden mb-6">
+                            <h3 class="text-sm font-bold text-gray-900 mb-3">ข้อมูลจำเพาะ (Specifications)</h3>
+                            <div id="detail-specs-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3">
+                        <button id="btn-add-to-cart" onclick="handleAddDetailToCart(false)" class="flex-1 bg-blue-50 hover:bg-blue-100 text-primary font-bold py-3.5 px-6 rounded-xl transition flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-cart-plus mr-2 text-base"></i> เพิ่มลงตะกร้า
+                        </button>
+                        <button id="btn-buy-now" onclick="handleAddDetailToCart(true)" class="flex-1 bg-primary hover:bg-blue-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-blue-600/20 transition flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-bolt mr-2"></i> ซื้อสินค้าทันที
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================================================== -->
+        <!-- SECTION: รีวิวและคะแนนจากผู้ใช้งานจริง (Customer Reviews & Rating) -->
+        <!-- ===================================================================== -->
+        <section id="reviews-section" class="hidden bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-gray-100">
+                <div>
+                    <h2 class="text-xl font-extrabold text-gray-900 flex items-center">
+                        <i class="fa-solid fa-star text-yellow-400 mr-2"></i> รีวิวและคะแนนจากลูกค้า
+                    </h2>
+                    <p class="text-xs text-gray-500 mt-1">ความคิดเห็นจากผู้ใช้งานจริงใน ElectroHub</p>
+                </div>
+
+                <!-- กล่องสรุปคะแนนดาวเฉลี่ย -->
+                <div class="flex items-center gap-4 bg-amber-50/70 border border-amber-200/80 px-5 py-3 rounded-2xl">
+                    <div class="text-center">
+                        <span id="review-summary-avg" class="text-3xl font-extrabold text-amber-600">5.0</span>
+                        <span class="text-xs text-gray-500 block">เต็ม 5.0</span>
+                    </div>
+                    <div class="border-l border-amber-200 pl-4">
+                        <div id="review-summary-stars" class="flex items-center space-x-1 text-yellow-400 text-sm mb-1"></div>
+                        <p id="review-summary-count" class="text-xs font-medium text-gray-600">จากทั้งหมด 0 รีวิว</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- ฝั่งซ้าย: ฟอร์มเขียนรีวิว (5 คอลัมน์) -->
+                <div class="lg:col-span-5">
+                    <div class="bg-gray-50 rounded-2xl p-5 border border-gray-200/80">
+                        <h3 id="review-form-title" class="text-base font-bold text-gray-900 mb-3 flex items-center">
+                            <i class="fa-solid fa-pen-nib text-primary mr-2"></i> เขียนรีวิวสินค้านี้
+                        </h3>
+
+                        <!-- กรณียังไม่ได้เข้าสู่ระบบ -->
+                        <div id="review-login-prompt" class="text-center py-6 space-y-3">
+                            <i class="fa-regular fa-user-circle text-4xl text-gray-300"></i>
+                            <p class="text-xs text-gray-500">กรุณาเข้าสู่ระบบสมาชิกก่อนเขียนรีวิวและให้คะแนนสินค้า</p>
+                            <a href="./index.html" class="inline-block bg-primary hover:bg-blue-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition">
+                                ไปหน้าเข้าสู่ระบบ
+                            </a>
+                        </div>
+
+                        <!-- ฟอร์มกรอกดาวและความคิดเห็น -->
+                        <form id="review-submit-form" onsubmit="handleSubmitReview(event)" class="hidden space-y-4">
+                            <div id="verified-buyer-notice" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-2 rounded-xl text-xs font-medium flex items-center">
+                                <i class="fa-solid fa-circle-check mr-2 text-emerald-600"></i> คุณเคยสั่งซื้อสินค้านี้แล้ว (จะได้รับป้ายผู้ซื้อยืนยัน)
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1.5">ให้คะแนนความพึงพอใจ *</label>
+                                <div class="flex items-center space-x-2" id="star-picker-container">
+                                    <button type="button" onclick="setReviewRating(1)" class="star-pick-btn text-2xl text-yellow-400 hover:scale-110 transition"><i class="fa-solid fa-star"></i></button>
+                                    <button type="button" onclick="setReviewRating(2)" class="star-pick-btn text-2xl text-yellow-400 hover:scale-110 transition"><i class="fa-solid fa-star"></i></button>
+                                    <button type="button" onclick="setReviewRating(3)" class="star-pick-btn text-2xl text-yellow-400 hover:scale-110 transition"><i class="fa-solid fa-star"></i></button>
+                                    <button type="button" onclick="setReviewRating(4)" class="star-pick-btn text-2xl text-yellow-400 hover:scale-110 transition"><i class="fa-solid fa-star"></i></button>
+                                    <button type="button" onclick="setReviewRating(5)" class="star-pick-btn text-2xl text-yellow-400 hover:scale-110 transition"><i class="fa-solid fa-star"></i></button>
+                                    <span id="star-rating-label" class="text-xs font-bold text-amber-600 ml-2">5 ดาว (ดีเยี่ยม)</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">ความคิดเห็นของคุณ *</label>
+                                <textarea id="review-comment-input" rows="4" required placeholder="บอกเล่าประสบการณ์การใช้งาน คุณภาพสินค้า หรือความคุ้มค่า..." class="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                            </div>
+
+                            <button type="submit" id="btn-submit-review" class="w-full bg-primary hover:bg-blue-700 active:scale-95 text-white font-semibold py-3 rounded-xl shadow-sm transition text-sm flex items-center justify-center">
+                                <i class="fa-solid fa-paper-plane mr-2"></i> ส่งรีวิวสินค้า
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ฝั่งขวา: รายการรีวิวทั้งหมด (7 คอลัมน์) -->
+                <div class="lg:col-span-7 space-y-4">
+                    <div id="reviews-list-container" class="space-y-3">
+                        <!-- รายการรีวิวจะถูกสร้างผ่าน JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Shopping Cart Sidebar -->
+    <div id="cart-sidebar" class="fixed inset-0 z-50 invisible">
+        <div id="cart-backdrop" class="absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-300" onclick="toggleCart()"></div>
+        <div id="cart-panel" class="absolute inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="text-lg font-bold text-gray-900"><i class="fa-solid fa-cart-shopping mr-2 text-primary"></i> ตะกร้าสินค้าของคุณ</h2>
+                <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-600 focus:outline-none p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="cart-items-container" class="flex-1 overflow-y-auto p-6 space-y-4 cart-scroll">
+                <div id="empty-cart-msg" class="text-center text-gray-500 py-10 flex flex-col items-center">
+                    <i class="fa-solid fa-basket-shopping text-4xl mb-3 opacity-20"></i>
+                    <p>ตะกร้าสินค้าว่างเปล่า</p>
+                </div>
+            </div>
+
+            <div class="border-t p-6 bg-gray-50 space-y-3">
+                <div>
+                    <div id="coupon-input-group" class="flex gap-2">
+                        <div class="relative flex-1">
+                            <i class="fa-solid fa-ticket absolute left-3 top-2.5 text-amber-500 text-xs"></i>
+                            <input type="text" id="cart-coupon-input" placeholder="กรอกโค้ดส่วนลด (เช่น HUB100-XXXX)" class="w-full pl-8 pr-3 py-2 bg-white border border-gray-300 rounded-xl text-xs uppercase focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <button type="button" onclick="applyCartCoupon()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap">
+                            ใช้โค้ด
+                        </button>
+                    </div>
+
+                    <div id="applied-coupon-badge" class="hidden flex items-center justify-between bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-xl text-xs">
+                        <span class="font-semibold flex items-center">
+                            <i class="fa-solid fa-circle-check mr-1.5"></i> <span id="applied-coupon-text">HUB100 (-฿100)</span>
+                        </span>
+                        <button type="button" onclick="removeCartCoupon()" class="text-red-500 hover:text-red-700 font-bold ml-2">ลบ</button>
+                    </div>
+                </div>
+
+                <div id="cart-discount-row" class="hidden flex justify-between text-sm font-medium text-green-600">
+                    <p>ส่วนลดคูปอง</p>
+                    <p id="cart-discount-amount">-฿0</p>
+                </div>
+
+                <div class="flex justify-between text-base font-bold text-gray-900 pt-1">
+                    <p>ยอดรวมสุทธิ</p>
+                    <p id="cart-total" class="text-primary text-lg">฿0</p>
+                </div>
+                <p class="text-xs text-gray-500">ราคานี้รวมภาษีมูลค่าเพิ่มแล้ว จัดส่งฟรี</p>
+                <button onclick="checkout()" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl shadow-md transition flex justify-center items-center">
+                    ดำเนินการชำระเงิน <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-4 left-4 sm:left-auto sm:right-5 z-[60] flex flex-col gap-2"></div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-8 mt-auto text-center text-sm">
+        <p>&copy; 2026 ElectroHub. สงวนลิขสิทธิ์.</p>
+    </footer>
+
+    <!-- Script เฉพาะหน้า product.html + ระบบรีวิวและให้คะแนนจริง -->
+    <script>
+        let currentProductDetail = null;
+        let selectedReviewRating = 5;
+        let existingUserReviewId = null;
+        let isCurrentUserVerifiedBuyer = false;
+
+        function getSpecIcon(label) {
+            const text = label.toLowerCase();
+            if (text.includes('หน้าจอ') || text.includes('ขนาดหน้าจอ')) return 'fa-display';
+            if (text.includes('ความละเอียด')) return 'fa-expand';
+            if (text.includes('รีเฟรช') || text.includes('refresh') || text.includes('hz')) return 'fa-gauge-high';
+            if (text.includes('เวลาตอบสนอง') || text.includes('response')) return 'fa-stopwatch';
+            if (text.includes('แสดงผลสี') || text.includes('สี') || text.includes('hdr')) return 'fa-palette';
+            if (text.includes('ซิงค์ภาพ') || text.includes('sync') || text.includes('เทคโนโลยีภาพ')) return 'fa-wand-magic-sparkles';
+            if (text.includes('ชิป') || text.includes('cpu')) return 'fa-microchip';
+            if (text.includes('การ์ดจอ') || text.includes('gpu')) return 'fa-gamepad';
+            if (text.includes('ram') || text.includes('หน่วยความจำ')) return 'fa-memory';
+            if (text.includes('ความจุ') || text.includes('ฮาร์ดดิสก์') || text.includes('ssd')) return 'fa-hard-drive';
+            if (text.includes('ระบบปฏิบัติการ') || text.includes('os')) return 'fa-window-maximize';
+            if (text.includes('แบตเตอรี่') || text.includes('ชาร์จ')) return 'fa-battery-full';
+            if (text.includes('กล้อง')) return 'fa-camera';
+            if (text.includes('ระบายความร้อน') || text.includes('พัดลม')) return 'fa-fan';
+            if (text.includes('พอร์ต') || text.includes('เชื่อมต่อ') || text.includes('อินเทอร์เฟซ')) return 'fa-plug';
+            if (text.includes('wi-fi') || text.includes('ไร้สาย')) return 'fa-wifi';
+            if (text.includes('ไฟ') || text.includes('rgb')) return 'fa-lightbulb';
+            if (text.includes('เซ็นเซอร์') || text.includes('dpi')) return 'fa-crosshairs';
+            if (text.includes('สวิตช์') || text.includes('ปุ่ม') || text.includes('คีย์บอร์ด')) return 'fa-keyboard';
+            if (text.includes('น้ำหนัก') || text.includes('ขนาด')) return 'fa-weight-hanging';
+            if (text.includes('รุ่นเครื่อง') || text.includes('โหมดการเล่น') || text.includes('คอนโทรลเลอร์')) return 'fa-gamepad';
+            if (text.includes('สื่อบันทึก') || text.includes('ไดรฟ์')) return 'fa-compact-disc';
+            if (text.includes('อุปกรณ์ในชุด') || text.includes('รองรับอุปกรณ์')) return 'fa-box-open';
+            return 'fa-circle-check';
+        }
+
+        function renderStarsHtml(ratingVal) {
+            let html = '';
+            const r = Number(ratingVal || 5);
+            for (let i = 1; i <= 5; i++) {
+                if (i <= Math.floor(r)) html += `<i class="fa-solid fa-star"></i>`;
+                else if (i === Math.ceil(r) && !Number.isInteger(r)) html += `<i class="fa-solid fa-star-half-stroke"></i>`;
+                else html += `<i class="fa-regular fa-star text-gray-300"></i>`;
+            }
+            return html;
+        }
+
+        function updateRatingDisplayUI(avgRating, totalReviews) {
+            const formattedAvg = Number(avgRating || 5).toFixed(1);
+            const starsHtml = renderStarsHtml(avgRating);
+
+            document.getElementById('detail-stars').innerHTML = starsHtml;
+            document.getElementById('detail-rating-score').innerText = formattedAvg;
+            document.getElementById('detail-reviews').innerText = `(${totalReviews} รีวิว)`;
+
+            document.getElementById('review-summary-avg').innerText = formattedAvg;
+            document.getElementById('review-summary-stars').innerHTML = starsHtml;
+            document.getElementById('review-summary-count').innerText = `จากทั้งหมด ${totalReviews} รีวิว`;
+        }
+
+        async function loadProductDetail() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+
+            const loadingEl = document.getElementById('loading-state');
+            const notFoundEl = document.getElementById('not-found-state');
+            const detailContainer = document.getElementById('product-detail-container');
+
+            if (!productId) {
+                loadingEl.classList.add('hidden');
+                notFoundEl.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('*')
+                    .eq('id', productId)
+                    .single();
+
+                if (error || !data) {
+                    loadingEl.classList.add('hidden');
+                    notFoundEl.classList.remove('hidden');
+                    return;
+                }
+
+                currentProductDetail = {
+                    id: data.id,
+                    name: data.name,
+                    category: data.category,
+                    subcategory: data.subcategory || null,
+                    price: data.price,
+                    originalPrice: data.original_price,
+                    rating: data.rating || 5.0,
+                    reviews: data.reviews || 0,
+                    image: data.image,
+                    badge: data.badge,
+                    stock: data.stock ?? 0,
+                    description: data.description,
+                    specs: data.specs
+                };
+
+                document.title = `${currentProductDetail.name} - ElectroHub`;
+                const catLabel = currentProductDetail.subcategory
+                    ? `${currentProductDetail.category} › ${currentProductDetail.subcategory}`
+                    : (currentProductDetail.category || 'สินค้าทั่วไป');
+
+                document.getElementById('breadcrumb-category').innerText = catLabel;
+                document.getElementById('breadcrumb-name').innerText = currentProductDetail.name;
+                document.getElementById('detail-category').innerText = catLabel;
+                document.getElementById('detail-name').innerText = currentProductDetail.name;
+                document.getElementById('detail-image').src = currentProductDetail.image;
+                document.getElementById('detail-image').alt = currentProductDetail.name;
+                document.getElementById('detail-price').innerText = formatPrice(currentProductDetail.price);
+
+                if (currentProductDetail.originalPrice) {
+                    const origEl = document.getElementById('detail-original-price');
+                    origEl.innerText = formatPrice(currentProductDetail.originalPrice);
+                    origEl.classList.remove('hidden');
+                }
+
+                if (currentProductDetail.badge) {
+                    const badgeEl = document.getElementById('detail-badge');
+                    badgeEl.innerText = currentProductDetail.badge;
+                    if (currentProductDetail.badge.includes('ลด')) {
+                        badgeEl.classList.replace('bg-primary', 'bg-red-500');
+                    }
+                    badgeEl.classList.remove('hidden');
+                }
+
+                updateRatingDisplayUI(currentProductDetail.rating, currentProductDetail.reviews);
+
+                const stockBadge = document.getElementById('detail-stock-badge');
+                const btnAdd = document.getElementById('btn-add-to-cart');
+                const btnBuy = document.getElementById('btn-buy-now');
+
+                if (currentProductDetail.stock > 0) {
+                    stockBadge.innerText = `มีสินค้าพร้อมส่ง (${currentProductDetail.stock} ชิ้น)`;
+                    stockBadge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700';
+                } else {
+                    stockBadge.innerText = 'สินค้าหมดชั่วคราว';
+                    stockBadge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-red-100 text-red-700';
+                    btnAdd.disabled = true;
+                    btnBuy.disabled = true;
+                    btnAdd.className = 'flex-1 bg-gray-100 text-gray-400 font-bold py-3.5 px-6 rounded-xl cursor-not-allowed text-sm';
+                    btnBuy.className = 'flex-1 bg-gray-200 text-gray-400 font-bold py-3.5 px-6 rounded-xl cursor-not-allowed text-sm';
+                }
+
+                document.getElementById('detail-description').innerText = currentProductDetail.description || 'สินค้าคุณภาพมาตรฐานจาก ElectroHub รับประกันศูนย์ไทย พร้อมบริการจัดส่งรวดเร็วทั่วประเทศ';
+
+                if (currentProductDetail.specs) {
+                    const specsSection = document.getElementById('specs-section');
+                    const specsList = document.getElementById('detail-specs-list');
+                    const items = currentProductDetail.specs.split('|').map(s => s.trim()).filter(Boolean);
+
+                    if (items.length > 0) {
+                        specsList.innerHTML = items.map(s => {
+                            const colonIdx = s.indexOf(':');
+                            let label = 'คุณสมบัติ';
+                            let value = s;
+                            if (colonIdx !== -1) {
+                                label = s.substring(0, colonIdx).trim();
+                                value = s.substring(colonIdx + 1).trim();
+                            }
+                            const iconClass = getSpecIcon(label);
+                            return `
+                                <div class="flex items-start gap-3 p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/40 border border-slate-200/80 hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group">
+                                    <div class="w-9 h-9 rounded-xl bg-white text-primary shadow-sm border border-blue-100 flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+                                        <i class="fa-solid ${iconClass} text-sm"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="block text-[11px] font-medium text-slate-400 uppercase tracking-wide">${label}</span>
+                                        <span class="block text-xs sm:text-sm font-bold text-slate-800 mt-0.5 leading-snug">${value}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                        specsSection.classList.remove('hidden');
+                    }
+                }
+
+                loadingEl.classList.add('hidden');
+                detailContainer.classList.remove('hidden');
+                document.getElementById('reviews-section').classList.remove('hidden');
+
+                await loadProductReviews(currentProductDetail.id);
+
+            } catch (err) {
+                console.error("Load product detail error:", err);
+                loadingEl.classList.add('hidden');
+                notFoundEl.classList.remove('hidden');
+            }
+        }
+
+        // ==========================================
+        // ระบบรีวิวและให้คะแนนสินค้า (Reviews & Rating)
+        // ==========================================
+        function setReviewRating(stars) {
+            selectedReviewRating = stars;
+            const labels = {
+                1: '1 ดาว (ควรปรับปรุง)',
+                2: '2 ดาว (พอใช้)',
+                3: '3 ดาว (ปานกลาง)',
+                4: '4 ดาว (ดีมาก)',
+                5: '5 ดาว (ดีเยี่ยม)'
+            };
+            document.getElementById('star-rating-label').innerText = labels[stars] || `${stars} ดาว`;
+
+            const btns = document.querySelectorAll('.star-pick-btn');
+            btns.forEach((btn, idx) => {
+                if (idx < stars) {
+                    btn.className = 'star-pick-btn text-2xl text-yellow-400 hover:scale-110 transition';
+                } else {
+                    btn.className = 'star-pick-btn text-2xl text-gray-300 hover:scale-110 transition';
+                }
+            });
+        }
+
+        async function checkUserVerifiedPurchase(productId) {
+            if (!currentUser) return false;
+            try {
+                const { data: orders, error } = await supabaseClient
+                    .from('orders')
+                    .select('items, status')
+                    .eq('user_id', currentUser.id)
+                    .neq('status', 'ยกเลิกคำสั่งซื้อ');
+
+                if (error || !orders) return false;
+
+                return orders.some(order =>
+                    Array.isArray(order.items) &&
+                    order.items.some(item => Number(item.id) === Number(productId))
+                );
+            } catch {
+                return false;
+            }
+        }
+
+        async function loadProductReviews(productId) {
+            const container = document.getElementById('reviews-list-container');
+            container.innerHTML = `<div class="text-center text-gray-400 py-8 text-sm"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>กำลังโหลดรีวิว...</div>`;
+
+            const { data: reviews, error } = await supabaseClient
+                .from('product_reviews')
+                .select('*')
+                .eq('product_id', productId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = `<div class="text-center text-red-500 py-6 text-xs">โหลดรีวิวไม่สำเร็จ: ${error.message}</div>`;
+                return;
+            }
+
+            const reviewList = reviews || [];
+
+            // คำนวณคะแนนเฉลี่ยจากรีวิวจริง (ถ้ายังไม่มีรีวิวให้ใช้ค่าเริ่มต้น 5.0)
+            if (reviewList.length > 0) {
+                const sumStars = reviewList.reduce((acc, r) => acc + Number(r.rating || 5), 0);
+                const avg = Number((sumStars / reviewList.length).toFixed(1));
+                updateRatingDisplayUI(avg, reviewList.length);
+            } else {
+                updateRatingDisplayUI(currentProductDetail.rating || 5.0, 0);
+            }
+
+            // เช็กสถานะฟอร์มเขียนรีวิวของผู้ใช้ปัจจุบัน
+            if (currentUser) {
+                document.getElementById('review-login-prompt').classList.add('hidden');
+                document.getElementById('review-submit-form').classList.remove('hidden');
+
+                isCurrentUserVerifiedBuyer = await checkUserVerifiedPurchase(productId);
+                if (isCurrentUserVerifiedBuyer) {
+                    document.getElementById('verified-buyer-notice').classList.remove('hidden');
+                }
+
+                const myPrevReview = reviewList.find(r => r.user_id === currentUser.id);
+                if (myPrevReview) {
+                    existingUserReviewId = myPrevReview.id;
+                    document.getElementById('review-form-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-500 mr-2"></i> แก้ไขรีวิวของคุณ`;
+                    document.getElementById('btn-submit-review').innerHTML = `<i class="fa-solid fa-floppy-disk mr-2"></i> อัปเดตรีวิวของฉัน`;
+                    setReviewRating(myPrevReview.rating);
+                    document.getElementById('review-comment-input').value = myPrevReview.comment || '';
+                }
+            } else {
+                document.getElementById('review-login-prompt').classList.remove('hidden');
+                document.getElementById('review-submit-form').classList.add('hidden');
+            }
+
+            // วาดรายการรีวิวทั้งหมด
+            if (reviewList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 bg-gray-50/70 rounded-2xl border border-dashed border-gray-200">
+                        <i class="fa-regular fa-comment-dots text-4xl text-gray-300 mb-2"></i>
+                        <p class="text-sm font-medium text-gray-600">ยังไม่มีรีวิวสำหรับสินค้านี้</p>
+                        <p class="text-xs text-gray-400 mt-0.5">เป็นคนแรกที่แบ่งปันความคิดเห็นเกี่ยวกับสินค้านี้เลย!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = reviewList.map(r => {
+                const dateStr = new Date(r.created_at).toLocaleDateString('th-TH', {
+                    year: 'numeric', month: 'short', day: 'numeric'
+                });
+                const initial = (r.user_name || 'U').charAt(0).toUpperCase();
+                const verifiedBadge = r.is_verified_buyer
+                    ? `<span class="inline-flex items-center text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full"><i class="fa-solid fa-circle-check mr-1 text-emerald-500"></i> สั่งซื้อสินค้านี้แล้ว</span>`
+                    : '';
+
+                return `
+                    <div class="p-4 sm:p-5 rounded-2xl border border-gray-100 bg-white shadow-2xs hover:shadow-sm transition">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full bg-blue-100 text-primary font-bold text-sm flex items-center justify-center flex-shrink-0">
+                                    ${initial}
+                                </div>
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="text-sm font-bold text-gray-900">คุณ${r.user_name}</span>
+                                        ${verifiedBadge}
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <div class="flex text-yellow-400 text-xs">${renderStarsHtml(r.rating)}</div>
+                                        <span class="text-[11px] text-gray-400">• ${dateStr}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-700 mt-3 leading-relaxed whitespace-pre-line">${r.comment || ''}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function syncProductAverageRating(productId) {
+            const { data: allRevs, error } = await supabaseClient
+                .from('product_reviews')
+                .select('rating')
+                .eq('product_id', productId);
+
+            if (error || !allRevs) return;
+
+            const count = allRevs.length;
+            const avg = count > 0
+                ? Number((allRevs.reduce((s, r) => s + Number(r.rating || 5), 0) / count).toFixed(1))
+                : 5.0;
+
+            await supabaseClient
+                .from('products')
+                .update({ rating: avg, reviews: count })
+                .eq('id', productId);
+        }
+
+        async function handleSubmitReview(event) {
+            event.preventDefault();
+            if (!currentUser || !currentProductDetail) {
+                showToast("กรุณาเข้าสู่ระบบก่อนส่งรีวิว", "error");
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-review');
+            const comment = document.getElementById('review-comment-input').value.trim();
+            if (!comment) {
+                showToast("กรุณาพิมพ์ข้อความรีวิวสินค้า", "error");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> กำลังบันทึกรีวิว...`;
+
+            try {
+                if (existingUserReviewId) {
+                    const { error } = await supabaseClient
+                        .from('product_reviews')
+                        .update({
+                            rating: selectedReviewRating,
+                            comment: comment,
+                            is_verified_buyer: isCurrentUserVerifiedBuyer
+                        })
+                        .eq('id', existingUserReviewId);
+
+                    if (error) throw error;
+                    showToast("อัปเดตรีวิวของคุณเรียบร้อยแล้ว!", "success");
+                } else {
+                    const { error } = await supabaseClient
+                        .from('product_reviews')
+                        .insert([{
+                            product_id: currentProductDetail.id,
+                            user_id: currentUser.id,
+                            user_name: currentUser.name,
+                            rating: selectedReviewRating,
+                            comment: comment,
+                            is_verified_buyer: isCurrentUserVerifiedBuyer
+                        }]);
+
+                    if (error) throw error;
+                    showToast("ขอบคุณสำหรับรีวิวสินค้า!", "success");
+                }
+
+                await syncProductAverageRating(currentProductDetail.id);
+                await loadProductReviews(currentProductDetail.id);
+
+            } catch (err) {
+                console.error("Submit review error:", err);
+                showToast("บันทึกรีวิวไม่สำเร็จ: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = existingUserReviewId
+                    ? `<i class="fa-solid fa-floppy-disk mr-2"></i> อัปเดตรีวิวของฉัน`
+                    : `<i class="fa-solid fa-paper-plane mr-2"></i> ส่งรีวิวสินค้า`;
+            }
+        }
+
+        function handleAddDetailToCart(openCartImmediately = false) {
+            if (!currentProductDetail) return;
+            addItemToSharedCart(currentProductDetail, openCartImmediately);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCartUI();
+            checkUserSession(() => {
+                loadProductDetail();
+            });
+        });
+    </script>
+</body>
+</html>

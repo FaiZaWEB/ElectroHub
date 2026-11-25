@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบสะสมคะแนนและแลกสิทธิพิเศษ - ElectroHub</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Kanit -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- เรียกใช้ไฟล์กลาง app.js -->
+    <script src="./app.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Kanit', 'Inter', 'sans-serif'] },
+                    colors: { primary: '#2563eb', secondary: '#1e293b' }
+                }
+            }
+        }
+    </script>
+    <style>
+        .cart-scroll::-webkit-scrollbar { width: 6px; }
+        .cart-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .cart-scroll::-webkit-scrollbar-thumb { background: #b8b8b8; border-radius: 10px; }
+        @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        .toast-enter { animation: slideInUp 0.3s ease-out forwards; }
+        .toast-exit { animation: fadeOut 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans flex flex-col min-h-screen overflow-x-hidden w-full">
+
+    <!-- Navbar -->
+    <nav class="bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100 sticky top-0 z-40 w-full">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo กลับหน้าแรก -->
+                <a href="./index.html" class="flex-shrink-0 flex items-center cursor-pointer group">
+                    <i class="fa-solid fa-microchip text-primary text-2xl mr-2 transition-transform group-hover:rotate-12"></i>
+                    <span class="font-bold text-xl sm:text-2xl tracking-tight text-secondary">Electro<span class="text-primary">Hub</span></span>
+                </a>
+                
+                <!-- Right Actions (เชื่อมกับ app.js) -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <a id="login-btn" href="./index.html" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition">
+                        เข้าสู่ระบบ
+                    </a>
+
+                    <div id="user-menu" class="hidden flex items-center space-x-2 bg-blue-50 text-primary font-medium px-3 py-1.5 rounded-full">
+                        <div class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs" id="user-avatar">U</div>
+                        <span id="user-display-name" class="text-xs sm:text-sm max-w-[120px] truncate">สมาชิก</span>
+                    </div>
+
+                    <button id="cart-nav-btn" onclick="toggleCart()" class="relative p-2 text-gray-600 hover:text-primary transition focus:outline-none">
+                        <i class="fa-solid fa-cart-shopping text-xl"></i>
+                        <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full">0</span>
+                    </button>
+
+                    <a href="./index.html" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition flex items-center">
+                        <i class="fa-solid fa-arrow-left sm:mr-2"></i> <span class="hidden sm:inline">หน้าร้าน</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Unauthenticated State (แสดงเมื่อยังไม่ได้ล็อกอิน) -->
+    <div id="rewards-login-box" class="hidden flex-grow flex items-center justify-center p-6">
+        <div class="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center border border-amber-100">
+            <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">ElectroHub Rewards</h2>
+            <p class="text-sm text-gray-500 mb-6">เข้าสู่ระบบเพื่อตรวจสอบคะแนนสะสมจากการสั่งซื้อ และแลกรับคูปองส่วนลดสุดพิเศษ</p>
+            <a href="./index.html" class="inline-block w-full bg-primary hover:bg-blue-700 text-white font-medium py-3 rounded-xl shadow transition">
+                กลับไปหน้าแรกเพื่อเข้าสู่ระบบ
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Rewards Content -->
+    <main id="rewards-main-content" class="hidden flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
+        
+        <!-- บัตรสมาชิก & คะแนนสะสมคงเหลือ -->
+        <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+            <div class="absolute -right-10 -top-10 w-56 h-56 bg-amber-400/10 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+                <div>
+                    <div class="inline-flex items-center bg-amber-400/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full text-xs font-bold mb-3">
+                        <i class="fa-solid fa-crown mr-1.5"></i> <span id="member-tier-label">ระดับสมาชิก: Silver Member</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-bold" id="rewards-user-name">สวัสดี, สมาชิก</h1>
+                    <p class="text-xs sm:text-sm text-blue-200 mt-1">
+                        <i class="fa-solid fa-circle-info mr-1"></i> กติกาการสะสมแต้ม: ยอดสั่งซื้อทุกๆ <b>100 บาท = 1 คะแนน</b> (คำนวณจากออเดอร์ที่ชำระเงินแล้ว)
+                    </p>
+                </div>
+
+                <!-- กล่องแสดงแต้มคงเหลือ -->
+                <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-5 min-w-[240px] w-full md:w-auto text-center">
+                    <span class="text-xs text-blue-200 uppercase tracking-wider font-semibold">คะแนนสะสมคงเหลือของคุณ</span>
+                    <div class="flex items-baseline justify-center gap-2 mt-1">
+                        <span id="available-points-display" class="text-4xl sm:text-5xl font-extrabold text-amber-400">0</span>
+                        <span class="text-sm font-bold text-amber-200">แต้ม</span>
+                    </div>
+                    <div class="text-[11px] text-gray-300 mt-2 pt-2 border-t border-white/10 flex justify-between">
+                        <span>ได้รับทั้งหมด: <b id="total-earned-display">0</b></span>
+                        <span>ใช้แลกไปแล้ว: <b id="total-spent-points-display">0</b></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- แถบความคืบหน้าระดับสมาชิก -->
+            <div class="mt-6 pt-5 border-t border-white/10 relative z-10">
+                <div class="flex justify-between text-xs text-blue-200 mb-1.5">
+                    <span id="tier-progress-text">สะสมอีก 100 แต้ม เพื่อเลื่อนระดับเป็น Gold Member</span>
+                    <span id="tier-percent-text">0%</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                    <div id="tier-progress-bar" class="bg-gradient-to-r from-amber-400 to-yellow-300 h-2.5 rounded-full transition-all duration-700" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- รายการของรางวัล & คูปองส่วนลดสำหรับแลกแต้ม -->
+        <div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                    <i class="fa-solid fa-gift text-primary mr-2"></i> แลกคูปองส่วนลด & สิทธิพิเศษ
+                </h2>
+                <span class="text-xs text-gray-500">เลือกคูปองที่ต้องการแลกด้วยคะแนนสะสม</span>
+            </div>
+
+            <div id="rewards-catalog-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- การ์ดของรางวัลจะถูกสร้างผ่าน JS -->
+            </div>
+        </div>
+
+        <!-- ประวัติคูปองที่แลกไว้แล้ว -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <i class="fa-solid fa-ticket text-amber-500 mr-2"></i> คูปองส่วนลดของฉันที่แลกไว้แล้ว
+            </h3>
+            <div id="my-coupons-list" class="space-y-3">
+                <p class="text-sm text-gray-400 text-center py-6">คุณยังไม่ได้แลกคูปองส่วนลดใดๆ</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Shopping Cart Sidebar (ใช้ร่วมกับ app.js) -->
+    <div id="cart-sidebar" class="fixed inset-0 z-50 invisible">
+        <div id="cart-backdrop" class="absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-300" onclick="toggleCart()"></div>
+        <div id="cart-panel" class="absolute inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="text-lg font-bold text-gray-900"><i class="fa-solid fa-cart-shopping mr-2 text-primary"></i> ตะกร้าสินค้าของคุณ</h2>
+                <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-600 focus:outline-none p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="cart-items-container" class="flex-1 overflow-y-auto p-6 space-y-4 cart-scroll">
+                <div id="empty-cart-msg" class="text-center text-gray-500 py-10 flex flex-col items-center">
+                    <i class="fa-solid fa-basket-shopping text-4xl mb-3 opacity-20"></i>
+                    <p>ตะกร้าสินค้าว่างเปล่า</p>
+                </div>
+            </div>
+            <div class="border-t p-6 bg-gray-50 space-y-3">
+                <!-- ช่องกรอกโค้ดส่วนลด -->
+                <div>
+                    <div id="coupon-input-group" class="flex gap-2">
+                        <div class="relative flex-1">
+                            <i class="fa-solid fa-ticket absolute left-3 top-2.5 text-amber-500 text-xs"></i>
+                            <input type="text" id="cart-coupon-input" placeholder="กรอกโค้ดส่วนลด (เช่น HUB100-XXXX)" class="w-full pl-8 pr-3 py-2 bg-white border border-gray-300 rounded-xl text-xs uppercase focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <button type="button" onclick="applyCartCoupon()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap">
+                            ใช้โค้ด
+                        </button>
+                    </div>
+
+                    <!-- แถบแสดงเมื่อใช้โค้ดสำเร็จ -->
+                    <div id="applied-coupon-badge" class="hidden flex items-center justify-between bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-xl text-xs">
+                        <span class="font-semibold flex items-center">
+                            <i class="fa-solid fa-circle-check mr-1.5"></i> <span id="applied-coupon-text">HUB100 (-฿100)</span>
+                        </span>
+                        <button type="button" onclick="removeCartCoupon()" class="text-red-500 hover:text-red-700 font-bold ml-2">ลบ</button>
+                    </div>
+                </div>
+
+                <!-- แถวแสดงยอดส่วนลด -->
+                <div id="cart-discount-row" class="hidden flex justify-between text-sm font-medium text-green-600">
+                    <p>ส่วนลดคูปอง</p>
+                    <p id="cart-discount-amount">-฿0</p>
+                </div>
+
+                <!-- ยอดรวมสุทธิ -->
+                <div class="flex justify-between text-base font-bold text-gray-900 pt-1">
+                    <p>ยอดรวมสุทธิ</p>
+                    <p id="cart-total" class="text-primary text-lg">฿0</p>
+                </div>
+                <p class="text-xs text-gray-500">ราคานี้รวมภาษีมูลค่าเพิ่มแล้ว จัดส่งฟรี</p>
+                <button onclick="checkout()" class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl shadow-md transition flex justify-center items-center">
+                    ดำเนินการชำระเงิน <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-4 left-4 sm:left-auto sm:right-5 z-[60] flex flex-col gap-2"></div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-8 mt-auto text-center text-sm">
+        <p>&copy; 2026 ElectroHub. สงวนลิขสิทธิ์.</p>
+    </footer>
+
+    <!-- Script เฉพาะหน้า rewards.html -->
+    <script>
+        // รายการคูปอง/ของรางวัลที่สามารถใช้คะแนนแลกได้
+        const REWARD_ITEMS = [
+            {
+                id: 'cp_100',
+                title: 'คูปองส่วนลด 100 บาท',
+                desc: 'ใช้เป็นส่วนลดเมื่อสั่งซื้อสินค้าครบ 1,000 บาทขึ้นไป',
+                pointsCost: 20,
+                discountValue: 100,
+                codePrefix: 'HUB100',
+                color: 'from-blue-600 to-indigo-600',
+                icon: 'fa-ticket'
+            },
+            {
+                id: 'cp_300',
+                title: 'คูปองส่วนลด 300 บาท',
+                desc: 'ใช้เป็นส่วนลดสำหรับสมาร์ทโฟนและแท็บเล็ตทุกรุ่น',
+                pointsCost: 50,
+                discountValue: 300,
+                codePrefix: 'HUB300',
+                color: 'from-amber-500 to-orange-600',
+                icon: 'fa-bolt'
+            },
+            {
+                id: 'cp_1000',
+                title: 'คูปองส่วนลด VIP 1,000 บาท',
+                desc: 'ส่วนลดพิเศษสำหรับสินค้ากลุ่ม Laptop และ Gaming Gear',
+                pointsCost: 150,
+                discountValue: 1000,
+                codePrefix: 'VIP1000',
+                color: 'from-purple-600 to-pink-600',
+                icon: 'fa-crown'
+            }
+        ];
+
+        let totalEarnedPoints = 0;
+        let redeemedHistory = [];
+
+        async function loadUserRewards(user) {
+            if (!user) {
+                document.getElementById('rewards-login-box').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('rewards-main-content').classList.remove('hidden');
+            document.getElementById('rewards-user-name').innerText = `สวัสดี, คุณ${user.name}`;
+
+            // 1. ดึงยอดสั่งซื้อทั้งหมดที่ชำระเงินแล้วจาก Supabase เพื่อคำนวณแต้ม (100 บาท = 1 แต้ม)
+            const { data: orders, error } = await supabaseClient
+                .from('orders')
+                .select('total_amount, status')
+                .eq('user_id', user.id);
+
+            if (!error && orders) {
+                const validOrders = orders.filter(o => o.status !== 'ยกเลิกคำสั่งซื้อ');
+                const totalSpent = validOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+                totalEarnedPoints = Math.floor(totalSpent / 100);
+            }
+
+            // 2. ดึงประวัติการแลกแต้มที่เก็บไว้ใน User Metadata ของ Supabase
+            const { data: { user: fullUser } } = await supabaseClient.auth.getUser();
+            redeemedHistory = fullUser?.user_metadata?.redeemed_coupons || [];
+
+            updatePointsUI();
+        }
+
+        function updatePointsUI() {
+            const spentPoints = redeemedHistory.reduce((sum, item) => sum + (item.pointsCost || 0), 0);
+            const availablePoints = Math.max(0, totalEarnedPoints - spentPoints);
+
+            document.getElementById('available-points-display').innerText = availablePoints.toLocaleString();
+            document.getElementById('total-earned-display').innerText = `${totalEarnedPoints.toLocaleString()} แต้ม`;
+            document.getElementById('total-spent-points-display').innerText = `${spentPoints.toLocaleString()} แต้ม`;
+
+            // คำนวณระดับสมาชิก (Silver / Gold / Platinum)
+            let tierName = 'Silver Member';
+            let nextTarget = 100;
+            if (totalEarnedPoints >= 500) {
+                tierName = 'Platinum VIP Member';
+                nextTarget = 500;
+            } else if (totalEarnedPoints >= 100) {
+                tierName = 'Gold Member';
+                nextTarget = 500;
+            }
+
+            document.getElementById('member-tier-label').innerText = `ระดับสมาชิก: ${tierName}`;
+            const percent = Math.min(100, Math.round((totalEarnedPoints / nextTarget) * 100));
+            document.getElementById('tier-progress-bar').style.width = `${percent}%`;
+            document.getElementById('tier-percent-text').innerText = `${percent}%`;
+
+            if (totalEarnedPoints >= 500) {
+                document.getElementById('tier-progress-text').innerText = 'คุณอยู่ในระดับสูงสุด Platinum VIP Member แล้ว!';
+            } else {
+                const diff = nextTarget - totalEarnedPoints;
+                const nextTier = totalEarnedPoints >= 100 ? 'Platinum VIP' : 'Gold Member';
+                document.getElementById('tier-progress-text').innerText = `สะสมอีก ${diff} แต้ม เพื่อเลื่อนระดับเป็น ${nextTier}`;
+            }
+
+            renderRewardsCatalog(availablePoints);
+            renderMyCoupons();
+        }
+
+        function renderRewardsCatalog(availablePoints) {
+            const grid = document.getElementById('rewards-catalog-grid');
+            grid.innerHTML = '';
+
+            REWARD_ITEMS.forEach(item => {
+                const canRedeem = availablePoints >= item.pointsCost;
+
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md transition';
+                card.innerHTML = `
+                    <div class="bg-gradient-to-r ${item.color} p-5 text-white flex justify-between items-center">
+                        <div>
+                            <span class="text-xs uppercase tracking-wider opacity-80 font-semibold">Voucher</span>
+                            <h3 class="text-lg font-bold mt-0.5">${item.title}</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl">
+                            <i class="fa-solid ${item.icon}"></i>
+                        </div>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col">
+                        <p class="text-xs text-gray-500 mb-4 flex-1">${item.desc}</p>
+                        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <div>
+                                <span class="text-xs text-gray-400 block">ใช้คะแนน</span>
+                                <span class="text-lg font-extrabold text-amber-600">${item.pointsCost} <span class="text-xs font-normal">แต้ม</span></span>
+                            </div>
+                            <button onclick="redeemReward('${item.id}')" ${canRedeem ? '' : 'disabled'} class="px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+                                canRedeem 
+                                ? 'bg-primary hover:bg-blue-700 text-white shadow-sm active:scale-95' 
+                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            }">
+                                ${canRedeem ? 'แลกคูปองเลย' : 'แต้มไม่เพียงพอ'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function redeemReward(rewardId) {
+            const item = REWARD_ITEMS.find(r => r.id === rewardId);
+            if (!item) return;
+
+            const spentPoints = redeemedHistory.reduce((sum, r) => sum + (r.pointsCost || 0), 0);
+            const availablePoints = totalEarnedPoints - spentPoints;
+
+            if (availablePoints < item.pointsCost) {
+                showToast("คะแนนสะสมของคุณไม่เพียงพอ", "error");
+                return;
+            }
+
+            if (!confirm(`ยืนยันการใช้ ${item.pointsCost} แต้ม เพื่อแลก "${item.title}" หรือไม่?`)) return;
+
+            // สร้างรหัสคูปองสุ่ม เช่น HUB100-8492
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            const couponCode = `${item.codePrefix}-${randomNum}`;
+
+            const newRecord = {
+                title: item.title,
+                code: couponCode,
+                pointsCost: item.pointsCost,
+                discountValue: item.discountValue,
+                redeemedAt: new Date().toISOString()
+            };
+
+            const updatedHistory = [newRecord, ...redeemedHistory];
+
+            try {
+                const { error } = await supabaseClient.auth.updateUser({
+                    data: { redeemed_coupons: updatedHistory }
+                });
+
+                if (error) throw error;
+
+                redeemedHistory = updatedHistory;
+                updatePointsUI();
+                showToast(`แลกคูปองสำเร็จ! รหัสของคุณคือ <b>${couponCode}</b>`, "success");
+            } catch (err) {
+                showToast("เกิดข้อผิดพลาดในการแลกคะแนน: " + err.message, "error");
+            }
+        }
+
+        function renderMyCoupons() {
+            const container = document.getElementById('my-coupons-list');
+            if (redeemedHistory.length === 0) {
+                container.innerHTML = `<p class="text-sm text-gray-400 text-center py-6">คุณยังไม่ได้แลกคูปองส่วนลดใดๆ</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            redeemedHistory.forEach(cp => {
+                const dateStr = new Date(cp.redeemedAt).toLocaleDateString('th-TH', {
+                    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                const row = document.createElement('div');
+                row.className = 'flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-amber-50/60 border border-amber-200/80 rounded-xl';
+                row.innerHTML = `
+                    <div>
+                        <p class="font-bold text-gray-900 text-sm">${cp.title}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">แลกเมื่อ: ${dateStr} (ใช้ไป ${cp.pointsCost} แต้ม)</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-white border border-dashed border-amber-400 text-amber-700 font-mono font-bold px-3 py-1.5 rounded-lg text-sm select-all">${cp.code}</span>
+                        <button onclick="copyCouponCode('${cp.code}')" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium px-3 py-2 rounded-lg transition">
+                            <i class="fa-regular fa-copy mr-1"></i> คัดลอก
+                        </button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function copyCouponCode(code) {
+            navigator.clipboard.writeText(code);
+            showToast(`คัดลอกรหัสคูปอง <b>${code}</b> เรียบร้อยแล้ว!`, "success");
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCartUI();
+            checkUserSession((user) => {
+                loadUserRewards(user);
+            });
+        });
+    </script>
+</body>
+</html>
